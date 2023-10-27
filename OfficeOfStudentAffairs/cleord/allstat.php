@@ -37,7 +37,7 @@ for ($i=1;$i<=3;$i++)
 	echo '</tr>';
 	for ($k=1;$k<=$classnum[$i];$k++)
 		{
-		echo '<tr><td>'.$i.chclass($k).'</td>';	
+		echo '<tr><td>'.($i+6).chclass($k).'</td>';	
 		for ($j=2;$j<count($weekarr);$j++)
 			{echo '<td>'.findrank($i,$j,$k).'</td>';}
 		echo '</tr>';	
