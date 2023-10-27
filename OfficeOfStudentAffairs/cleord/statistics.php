@@ -210,11 +210,11 @@ function datacor()
 function chstage($num)
 	{
 	if ($num==1)
-		{return "一年級";}
+		{return "七年級";}
 	if ($num==2)
-		{return "二年級";}
+		{return "八年級";}
 	if ($num==3)
-		{return "三年級";}	
+		{return "九年級";}	
 	return "年級找不到";			
 	}
 
