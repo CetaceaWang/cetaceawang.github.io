@@ -42,15 +42,15 @@ for ($i=1;$i<count($weekarr);$i++)
 	echo '<option value="1" ';
 	if (isset($_REQUEST["stage"]) && $_REQUEST["stage"]==1)
 		echo 'selected="selected"';
-	echo '>一年級</option>';
+	echo '>七年級</option>';
 	echo '<option value="2" ';
 	if (isset($_REQUEST["stage"]) && $_REQUEST["stage"]==2)
 		echo 'selected="selected"';
-	echo '>二年級</option>';
+	echo '>八年級</option>';
 	echo '<option value="3" ';
 	if (isset($_REQUEST["stage"]) && $_REQUEST["stage"]==3)
 		echo 'selected="selected"';
-	echo '>三年級</option>';
+	echo '>九年級</option>';
 ?>
    </select>   
 </p>
