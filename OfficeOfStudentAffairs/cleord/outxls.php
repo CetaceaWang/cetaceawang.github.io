@@ -130,7 +130,7 @@ function findweekser($weekser)
 function distscore($j,$i)
 	{
 	global $mysqli;	
-	$class=$j.chclass($i);
+	$class=($j+6).chclass($i);
 	echo '<tr><td>'.$class.'</td>';
 	$sql_select = "select Mon,Tue,Wed,Thu,Fri,Sat,Sun,tscore,rank,memo from cleord  WHERE week='".$_REQUEST["selweek"]."' AND kind='".$_REQUEST["selcleord"]."' AND class='".$class."'";
 	if (!$record_set =$mysqli->query($sql_select))
