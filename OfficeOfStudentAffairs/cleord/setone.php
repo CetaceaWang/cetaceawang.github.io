@@ -23,9 +23,9 @@ if (isset($_REQUEST["send"]) && $_REQUEST["send"]=="確定清空資料")
 		<td  align="center">學期</td>
 		<td  align="center">開學日期</td>
 		<td  align="center">學期結束日期</td>
-		<td  align="center">一年級班級數</td>
-		<td  align="center">二年級班級數</td>
-		<td  align="center">三年級班級數</td>
+		<td  align="center">七年級班級數</td>
+		<td  align="center">八年級班級數</td>
+		<td  align="center">九年級班級數</td>
 		<td  align="center">功能按鈕</td>
 	</tr>
 	<tr>
