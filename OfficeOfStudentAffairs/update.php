@@ -1,33 +1,53 @@
 <?php
-$UpdateURL = 'https://cingyue.lionfree.net/OfficeOfStudentAffairs';
+$UpdateURL = 'https://cetaceawang.github.io/OfficeOfStudentAffairs/';
 SetMain();
-//http://localhost/OfficeOfStudentAffairs/getcontent4.php?filename=update.php&submit=upload&password=ef1e539726fbade3b40a0ceab8d4a4af
-$UpdateObject=json_decode(URLExist($UpdateURL.'/update.txt'));
-$LocalObject=GetLocalObject();
-if (!isset($myObj)) 
-    $myObj = new stdClass();  
-$myObj->version = 1;
-$myArr = array("index.html" => 1);
-$myObj->update = $myArr;
-$myJSON = json_encode($myObj);
-echo $myJSON."<BR>";
-$newJSON=json_decode($myJSON);
-echo $newJSON->version."<BR>";
-//echo $newJSON->update[2];
-$file = 'update.txt';
-file_put_contents($file, $myJSON);
-$url = 'https://cingyue.lionfree.net/OfficeOfStudentAffairs/update.txt';
-echo 'Fetching contents from URL: ' . $url ."<br>";
-$contents = file_get_contents($url);
-if($contents === FALSE)
-    echo "error";
+$UpdateJson='update.json';
+$UpdateFileContents=URLExist($UpdateURL.$UpdateJson);
+$UpdateObject=json_decode($UpdateFileContents);
+$LocalObject=GetLocalObject($UpdateJson);
+if ($UpdateObject->version <= $LocalObject->version)
+	{
+	Message("本機版本:".$LocalObject->version."無須更新",true,true);	
+	exit;
+	}
 else
-    echo "right";
-
-function GetLocalObject(){
-	if (!file_exists('update.txt'))
+	Message("版本更新中",true);
+$UpdateArray=(array)$UpdateObject->update;	
+$LocalArray=(array)$LocalObject->update;	
+//檢查更新檔案,$Key也是檔案名稱
+foreach (array_keys($UpdateArray) as $Key) 
+	if (!array_key_exists($Key, $LocalArray) || ($LocalArray[$Key] < $UpdateArray[$Key]))
+		UpdateFile($Key);
+$contents = @file_put_contents($UpdateJson, $UpdateFileContents);
+if($contents)
+	Message("更新檔案：".$UpdateJson,false,false);
+else{
+	Message("更新失敗：檔案無法寫入=>".$UpdateJson,false,true,"red");
+	exit;
+}
+Message("更新完成",false,true);
+function UpdateFile($FileName){
+	global $UpdateURL;
+	$FileContents=URLExist($UpdateURL.$FileName,false);
+	if (file_exists(ChangeFileName($FileName)))
+		unlink(ChangeFileName($FileName));
+	if (file_exists($FileName))
+		rename($FileName, ChangeFileName($FileName));
+	$contents = @file_put_contents($FileName, $FileContents);
+    if($contents)
+		Message("更新檔案：".$FileName,false,false);
+	else{
+		Message("更新失敗：檔案無法寫入=>".$FileName,false,true,"red");
+		exit;
+	}
+}
+function ChangeFileName($FileName){
+	return substr($FileName,0,-3)."old"; 
+}
+function GetLocalObject($UpdateJson){
+	if (!file_exists($UpdateJson))
 		return DefaultObject();
-	$content = file_get_contents('update.txt');	
+	$content = file_get_contents($UpdateJson);	
 	return json_decode($content);
 }
 function DefaultObject(){
@@ -37,14 +57,13 @@ function DefaultObject(){
 	$Object->update = array();
 	return $Object;
 }
-function URLExist($url){
-    $contents = file_get_contents($url);
-    if($contents === FALSE){
-        Message("無法更新：連結無效 =>"+$url);
-		exit;
-	}
-    else
-        return $contents;
+function URLExist($url,$Head=true){
+    $contents = @file_get_contents($url);
+    if($contents)
+		return $contents;
+	else
+		Message("無法更新：連結無效 =>"+$url,$Head,true,"red");
+	exit;
 } 
 function SetMain(){
 	global $MainHead,$MainFoot;
@@ -59,10 +78,10 @@ function SetMain(){
 		</head>
 		<body  background="images/background1.jpg">
 			<table cellspacing=1 cellpadding=3><tr>
-				<td class="tab" bgcolor="#FFF158">&nbsp;<a href="index.html">首頁</a>&nbsp;</td>
+				<td class="tab" bgcolor="#EFEFEF">&nbsp;<a href="index.html">首頁</a>&nbsp;</td>
 				<td class="tab" bgcolor="#EFEFEF">&nbsp;<a href="dds/index.php">代導師</a>&nbsp;</td>
 				<td class="tab" bgcolor="#EFEFEF">&nbsp;<a href="cleord/index.php">整潔秩序</a>&nbsp;</td>
-				<td class="tab" bgcolor="#EFEFEF">&nbsp;<a href="update.php">更新</a>&nbsp;</td>
+				<td class="tab" bgcolor="#FFF158">&nbsp;<a href="update.php">更新</a>&nbsp;</td>
 				</tr></table>
 				<div>
 				<h2>';
@@ -74,8 +93,12 @@ function SetMain(){
 		</body>
 		</html>';
 }   
-function Message($Text){
+function Message($Text,$Head=false,$Foot=false,$Color="blue"){
 	global $MainHead,$MainFoot;
-	echo $MainHead.$Text.$MainFoot;
+	if ($Head)
+		echo $MainHead;
+	echo '<font color="'.$Color.'">'.$Text.'</font>'."<BR>";
+	if ($Foot)
+		echo $MainFoot;
 }        
 ?>
