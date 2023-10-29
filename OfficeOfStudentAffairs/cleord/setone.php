@@ -59,7 +59,7 @@ echo  $echo_text;
 echo $echo_text_end;
 ?>
 <hr>
-<font color="#FF00CC">★[回存]會清空所有資料，使用前務必使用[備份]。</font><form id="formbackup" name="formbackup" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+<font color="#FF00CC">★[回存]會清空所有資料，會清空所有資料，請審慎使用。</font><form id="formbackup" name="formbackup" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
 <input type="submit" name="backup"  value="備份" />
 <input type="submit" name="restore" style="color:white; background-color: #f44336;" value="回存" /></form>
 <br>
