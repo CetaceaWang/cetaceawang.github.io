@@ -4,17 +4,23 @@ SelectMenu("setone.php","期初設定");
 $mysqli = new mysqli($DB_SERVER,$DB_LOGIN,$DB_PASSWORD,$DB_NAME);
 if ($mysqli->connect_errno) {echo "連接資料庫失敗: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;exit();}
 if (!$mysqli->set_charset("utf8")) {printf("資料庫設定無法設定utf8編碼: %s\r\n", $mysqli->error);exit();}
+$RemoteUrl="https://cingyue.lionfree.net/OfficeOfStudentAffairs/cleord/";
 $echo_text="";
 $echo_text_end="";
+$BackupText="";
 if (isset($_REQUEST["Confirm"]) && $_REQUEST["Confirm"]=="設定確認")
 	set_year_semester();
-if (isset($_REQUEST["send"]) && $_REQUEST["send"]=="確定清空資料")
+if (isset($_REQUEST["send"]) && $_REQUEST["send"]=="清空資料")
 	{
 	$sql_select = "TRUNCATE TABLE cleord";
 	if (!$record_set =$mysqli->query($sql_select))
 		error_echo ($_SERVER['PHP_SELF'].__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);
 	$echo_text_end="<font color='#D26900'>清空資料完成。</font>";	
 	}
+if (isset($_REQUEST["backup"]) && $_REQUEST["backup"]=="備份")
+	BackupToRemote($RemoteUrl."RemoteBackupServer.php");
+if (isset($_REQUEST["restore"]) && $_REQUEST["restore"]=="回存")
+	RestoreFromRemote($RemoteUrl."cleord.txt");	
 ?>
 <form id="year_semester" name="year_semester" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
 <table >
@@ -45,13 +51,99 @@ if (isset($_REQUEST["send"]) && $_REQUEST["send"]=="確定清空資料")
 echo  $echo_text;
 ?>
 <hr>
-<font color="#FF00CC">★[確定清空資料]會清空所有資料，使用前請確認需要的資料均已下載，學期初必須使用一次。</font><form id="forminput" name="forminput" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-<input type="submit" name="send"  value="確定清空資料" /></form>
+<font color="#FF00CC">★[清空資料]會清空所有資料，使用前務必使用[備份]並確認需要的資料均已下載，學期初必須使用一次。</font>
+<form id="forminput" name="forminput" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+<input type="submit" name="send" style="color:white; background-color: #f44336;" value="清空資料" /></form>
 <br>
 <?php
 echo $echo_text_end;
+?>
+<hr>
+<font color="#FF00CC">★[回存]會清空所有資料，使用前務必使用[備份]。</font><form id="formbackup" name="formbackup" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+<input type="submit" name="backup"  value="備份" />
+<input type="submit" name="restore" style="color:white; background-color: #f44336;" value="回存" /></form>
+<br>
+<?php
+echo $BackupText;
 FootCode();
 //'".date( "Y-m-d", strtotime( $_REQUEST["StartDay"] ))."' 
+function BackupToRemote($UploadUrl){
+	$FileContents=BackupFile("cleord.sql");
+	UploadFile($FileContents,$UploadUrl);
+}
+function RestoreFromRemote($DownloadUrl){
+	global $BackupText,$mysqli;
+	BackupFile("cleord.old");
+    $contents = @file_get_contents($DownloadUrl);
+    if(!$contents){
+		$BackupText .= Message("無法讀取遠端檔案：".$DownloadUrl,"red");
+		return;
+	}
+	if (!$record_set =$mysqli->multi_query($contents))
+		error_echo ($_SERVER['PHP_SELF'].__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);
+	else
+		$BackupText .= Message("回存成功");	
+}
+function BackupFile($Name){
+	global $BackupText;
+	$FileContents=ExportSql("cleord").ExportSql("year_semester_class");
+	$contents = @file_put_contents($Name, $FileContents);
+    if($contents)
+		$BackupText .= Message("檔案寫入成功 ".$Name);
+	else
+		$BackupText .= Message("無法寫入 ".$Name,"red");
+	return 	$FileContents;
+}
+function UploadFile($Contents,$UploadUrl){
+	global $BackupText;
+	if (!CurlExist())
+		{
+			$BackupText .= Message("curl_version不存在","red");
+			return;
+		}
+	$post = array('import'=>$Contents,'password4' => 'ef1e539726fbade3b40a0ceab8d4a4af','save' => 'Do');
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL,$UploadUrl);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+	curl_setopt($ch, CURLOPT_POST, 1);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+	$result = @curl_exec($ch); 	
+	curl_close ($ch);
+	if($result)
+		$BackupText .= Message("備份上傳成功");
+	else
+		$BackupText .= Message("備份上傳失敗","red");
+}
+function Message($Text,$Color="blue"){
+	return '<font color="'.$Color.'">'.$Text.'</font>'."<BR>";
+}
+function ExportSql($table)
+{
+	global $mysqli;
+	$sql="show create table `$table`";
+	if (!$record_set =$mysqli->query($sql))
+		error_echo ($_SERVER['PHP_SELF'].__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);
+	$q2 = $record_set->fetch_array(MYSQLI_BOTH);		
+	$mysql = $q2['Create Table'] . ";\r\n";
+	$q3="select * from `$table`";
+	if (!$record_set3 =$mysqli->query($q3))
+		error_echo ($_SERVER['PHP_SELF'].__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);
+	while ($data = $record_set3->fetch_assoc()) {
+		$keys = array_keys($data);
+		$keys = array_map('addslashes', $keys);
+		$keys = join('`,`', $keys);
+		$keys = "`" . $keys . "`";
+		$vals = array_values($data);
+		$vals = array_map('addslashes', $vals);
+		$vals = join("','", $vals);
+		$vals = "'" . $vals . "'";
+		$mysql .= "insert into `$table`($keys) values($vals);\r\n";
+	}
+	return "DROP TABLE IF EXISTS $table;\r\n".$mysql;
+}
+function CurlExist(){
+    return function_exists('curl_version');
+}
 function set_year_semester()
 	{
 	global $echo_text,$mysqli;
