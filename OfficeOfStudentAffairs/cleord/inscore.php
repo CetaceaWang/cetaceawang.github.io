@@ -67,7 +67,7 @@ if (isset($_REQUEST["selweek"]) && $_REQUEST["selweek"]!="")
 		echo '</tr>';	
 		for ($i=1;$i<=$classnum[$_REQUEST["stage"]];$i++)
 			{
-			echo '<tr><td>'.($_REQUEST["stage"]+6).chclass($i).'</td>';
+			echo '<tr><td>'.($_REQUEST["stage"]+6).($i).'</td>';
 			for ($j=1;$j<=7;$j++)
 				{echo '<td><input type="text" name="score['.$_REQUEST["stage"].']['.$i.']['.$j.']"  
 					value="" size="3"/ tabindex="'.(($j-1)*$classnum[$_REQUEST["stage"]]+$i).'"></td>';}
@@ -112,7 +112,7 @@ function disscore($i)
 	{
 	global $classnum,$mysqli;	
 	$class=$_REQUEST["stage"].chclass($i);
-	echo '<tr><td>'.$class.'</td>';
+	echo '<tr><td>'.($_REQUEST["stage"]+6).chclass($i).'</td>';
 	$sql_select = "select Mon,Tue,Wed,Thu,Fri,Sat,Sun from cleord  WHERE week='".$_REQUEST["selweek"]."' AND kind='".$_REQUEST["selcleord"]."' AND class='".$class."'";
 	if (!$record_set =$mysqli->query($sql_select))
 		error_echo ($_SERVER['PHP_SELF'].__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);
