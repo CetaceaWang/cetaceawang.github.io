@@ -390,8 +390,8 @@ function findweekser($weekser)
 function distscore($j,$i)
 	{
 	global$mysqli;	
-	$class=($j+6).chclass($i);
-	echo '<tr><td>'.$class.'</td>';
+	$class=$j.chclass($i);
+	echo '<tr><td>'.($j+6).chclass($i).'</td>';
 	$sql_select = "select Mon,Tue,Wed,Thu,Fri,Sat,Sun,tscore,rank,memo from cleord  WHERE week='".$_REQUEST["selweek"]."' AND kind='".$_REQUEST["selcleord"]."' AND class='".$class."'";
 	if (!$record_set =$mysqli->query($sql_select))
 		error_echo ($_SERVER['PHP_SELF'].__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);	
