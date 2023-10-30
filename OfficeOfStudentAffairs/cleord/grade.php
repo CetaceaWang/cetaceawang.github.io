@@ -93,9 +93,9 @@ function findhonor($j,$i)
 	while (list($class,$memo)=$record_set->fetch_array(MYSQLI_NUM))
 		{
 		if 	($memo=='新增')
-			{$rtxt.=$class."(新增)、";}
+			{$rtxt.=C1T7($class)."(新增)、";}
 		else
-			{$rtxt.=$class."、";}	
+			{$rtxt.=C1T7($class)."、";}	
 		}
 		if ($rtxt!="")
 		{
@@ -115,7 +115,7 @@ function findspec($j,$i)
 		error_echo ($_SERVER['PHP_SELF'].__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);
 	$rtxt="";
 	while (list($class)=$record_set->fetch_array(MYSQLI_NUM))
-		{$rtxt.=$class."、";}
+		{$rtxt.=C1T7($class)."、";}
 	if ($rtxt!="")
 		{
 		$rtxt=substr($rtxt, 0, -3);
@@ -134,7 +134,7 @@ function findnor($j,$i)
 		error_echo ($_SERVER['PHP_SELF'].__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);
 	$rtxt="";
 	while (list($class)=$record_set->fetch_array(MYSQLI_NUM))
-		{$rtxt.=$class."、";}
+		{$rtxt.=C1T7($class)."、";}
 	if ($rtxt!="")
 		{
 		$rtxt=substr($rtxt, 0, -3);
@@ -142,7 +142,9 @@ function findnor($j,$i)
 		}	
 	return -1;	
 	}	
-
+function C1T7($Number){
+	return $Number+600;
+}
 function chstage($num)
 	{
 	if ($num==1)
