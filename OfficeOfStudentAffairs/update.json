@@ -2,7 +2,7 @@
   "version": 1.02,
   "update": {
     "cleord/allstat.php": 1.01,
-    "cleord/grade.php": 1.01,
+    "cleord/grade.php": 1.02,
     "cleord/inscore.php": 1.02,
     "cleord/outalldoc.php": 1.01,
     "cleord/outdoc.php": 1.01,
