@@ -67,7 +67,7 @@ if (isset($_REQUEST["selweek"]) && $_REQUEST["selweek"]!="")
 		echo '</tr>';	
 		for ($i=1;$i<=$classnum[$_REQUEST["stage"]];$i++)
 			{
-			echo '<tr><td>'.$_REQUEST["stage"].chclass($i).'</td>';
+			echo '<tr><td>'.($_REQUEST["stage"]+6).chclass($i).'</td>';
 			for ($j=1;$j<=7;$j++)
 				{echo '<td><input type="text" name="score['.$_REQUEST["stage"].']['.$i.']['.$j.']"  
 					value="" size="3"/ tabindex="'.(($j-1)*$classnum[$_REQUEST["stage"]]+$i).'"></td>';}
