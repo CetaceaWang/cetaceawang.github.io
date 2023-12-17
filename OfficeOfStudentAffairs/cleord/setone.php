@@ -1,4 +1,5 @@
 <?php
+//1.03 刪除上傳功能;
 include "config.php";
 SelectMenu("setone.php","期初設定");
 $mysqli = new mysqli($DB_SERVER,$DB_LOGIN,$DB_PASSWORD,$DB_NAME);
