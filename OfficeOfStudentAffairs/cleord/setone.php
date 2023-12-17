@@ -59,7 +59,7 @@ echo  $echo_text;
 echo $echo_text_end;
 ?>
 <hr>
-<font color="#FF00CC">★[回存]會清空所有資料，會清空所有資料，請審慎使用。</font><form id="formbackup" name="formbackup" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+<font color="#FF00CC">★[回存]會清空所有資料，請審慎使用。</font><form id="formbackup" name="formbackup" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
 <input type="submit" name="backup"  value="備份" />
 <input type="submit" name="restore" style="color:white; background-color: #f44336;" value="回存" /></form>
 <br>
@@ -69,7 +69,8 @@ FootCode();
 //'".date( "Y-m-d", strtotime( $_REQUEST["StartDay"] ))."' 
 function BackupToRemote($UploadUrl){
 	$FileContents=BackupFile("cleord.sql");
-	UploadFile($FileContents,$UploadUrl);
+	//由於 lionfree 阻擋
+	//UploadFile($FileContents,$UploadUrl);
 }
 function RestoreFromRemote($DownloadUrl){
 	global $BackupText,$mysqli;
@@ -107,8 +108,16 @@ function UploadFile($Contents,$UploadUrl){
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
 	curl_setopt($ch, CURLOPT_POST, 1);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+	//
+	curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
+	curl_setopt($ch, CURLOPT_HEADER, 0);
+	curl_setopt($ch, CURLOPT_AUTOREFERER, TRUE);
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, TRUE);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+	curl_setopt($ch, CURLOPT_VERBOSE, true);
 	$result = @curl_exec($ch); 	
 	curl_close ($ch);
+	print_r($result);
 	if($result)
 		$BackupText .= Message("備份上傳成功");
 	else
