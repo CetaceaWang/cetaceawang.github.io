@@ -8,7 +8,7 @@ $main=
 '<table border="1">  
   <tr bgcolor="#00CCFF">
   <form method="POST" action="ddscsv.php"><td><p><input type="submit" value="下載csv" name="B1"></p></td></form>
-  <form method="POST" action="ExportToXls.php"><td><p><input type="submit" value="匯出班級xls" name="B2"></p></td></form>
+  <form method="POST" action="ExportToCsv.php"><td><p><input type="submit" value="下載班級csv" name="B2"></p></td></form>
    </tr>
     ';
 $main.=
