@@ -1,17 +1,18 @@
 {
-  "version": 1.03,
-  "update": {
-    "cleord/allstat.php": 1.01,
-    "cleord/grade.php": 1.02,
-    "cleord/inscore.php": 1.02,
-    "cleord/outalldoc.php": 1.01,
-    "cleord/outdoc.php": 1.02,
-    "cleord/outtxt.php": 1.02,
-    "cleord/outxls.php": 1.02,
-    "cleord/setone.php": 1.03,
-    "cleord/statistics.php": 1.02,
-    "dds/dds5.php": 1.03,
-    "dds/ExportToCsv.php": 1.03,
-    "index.html": 1.01
-  }
+  "version": 1.04,
+    "update": {
+        "cleord/allstat.php": 1.01,
+        "cleord/grade.php": 1.02,
+        "cleord/inscore.php": 1.02,
+        "cleord/outalldoc.php": 1.01,
+        "cleord/outdoc.php": 1.02,
+        "cleord/outtxt.php": 1.02,
+        "cleord/outxls.php": 1.02,
+        "cleord/setone.php": 1.03,
+        "cleord/statistics.php": 1.02,
+        "dds/dds5.php": 1.03,
+        "dds/dds6.php": 1.04,
+        "dds/ExportToCsv.php": 1.03,
+        "index.html": 1.01
+    }
 }
