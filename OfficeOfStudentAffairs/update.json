@@ -12,6 +12,9 @@
         "cleord/statistics.php": 1.02,
         "dds/dds5.php": 1.03,
         "dds/dds6.php": 1.04,
+        "dds/dds_bac.php": 1.04,
+        "dds/ProductionTutor.xlsm": 1.04,
+        "dds/Csv2Csv.exe": 1.04,
         "dds/ExportToCsv.php": 1.03,
         "index.html": 1.01
     }
