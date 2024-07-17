@@ -36,7 +36,8 @@ echo $main;
 　　　用記事本開啟[upnewutf8.csv]，有些亂碼字搜尋取代更改完後儲存。<br />
 　五、使用本頁->瀏覽->選擇upnewutf8.csv->[上傳備份資料]。<br />
 <br />
-<font color="#0464F9">工具程式：</font><a href="ProductionTutor.xlsm">製作代導師上傳檔案</a>，
+<font color="#0464F9">工具程式：</font>
+<a href="%E8%A3%BD%E4%BD%9C%E4%BB%A3%E5%B0%8E%E5%B8%AB%E4%B8%8A%E5%82%B3%E6%AA%94%E6%A1%88.xlsm">製作代導師上傳檔案</a>，
 <a href="Csv2Csv.exe">Csv2Csv</a><br />
 <?php
 FootCode();

@@ -1,6 +1,7 @@
 {
   "version": 1.04,
     "update": {
+        "update.php": 1.04,
         "cleord/allstat.php": 1.01,
         "cleord/grade.php": 1.02,
         "cleord/inscore.php": 1.02,
@@ -13,7 +14,6 @@
         "dds/dds5.php": 1.03,
         "dds/dds6.php": 1.04,
         "dds/dds_bac.php": 1.04,
-        "dds/ProductionTutor.xlsm": 1.04,
         "dds/%E8%A3%BD%E4%BD%9C%E4%BB%A3%E5%B0%8E%E5%B8%AB%E4%B8%8A%E5%82%B3%E6%AA%94%E6%A1%88.xlsm": 1.04,
         "dds/Csv2Csv.exe": 1.04,
         "dds/ExportToCsv.php": 1.03,

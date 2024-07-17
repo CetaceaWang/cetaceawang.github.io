@@ -17,7 +17,7 @@ $LocalArray=(array)$LocalObject->update;
 //檢查更新檔案,$Key也是檔案名稱
 foreach (array_keys($UpdateArray) as $Key) 
 	if (!array_key_exists($Key, $LocalArray) || ($LocalArray[$Key] < $UpdateArray[$Key]))
-		UpdateFile($Key);
+		UpdateFile($Key);//urldecode
 $contents = @file_put_contents($UpdateJson, $UpdateFileContents);
 if($contents)
 	Message("更新檔案：".$UpdateJson,false,false);
@@ -29,6 +29,7 @@ Message("更新完成",false,true);
 function UpdateFile($FileName){
 	global $UpdateURL;
 	$FileContents=URLExist($UpdateURL.$FileName,false);
+	$FileName=urldecode($FileName);//urldecode
 	if (file_exists(ChangeFileName($FileName)))
 		unlink(ChangeFileName($FileName));
 	if (file_exists($FileName))
