@@ -37,7 +37,10 @@ echo $main;
 　五、使用本頁->瀏覽->選擇upnewutf8.csv->[上傳備份資料]。<br />
 <br />
 <font color="#0464F9">工具程式：</font>
-<a href="Csv2Csv.exe">Csv2Csv</a><br />
+<a href="Csv2Csv.exe">Csv2Csv</a>、
+<a href="製作代導師上傳檔案.xlsm">製作代導師上傳檔案</a>、
+<a href="代導師時數暨商數統計表.xlsm">代導師時數暨商數統計表</a>
+<br />
 <?php
 FootCode();
 function inp_bac()
