@@ -30,14 +30,10 @@ echo $main;
 　二、後製作upnew.csv，以office2007為例。<br />
 　　　1.[SPVTXT.xls]跟[製作代導師上傳檔案.xls]在同一目錄後開啟[製作代導師上傳檔案.xls]->GO。<br />
 　　　2.離開excel->否。<br />
-　三、利用csv2csv程式製作雙引號，在目錄中有此檔。<br />
-　　　讀取csv[upnew.csv]->取消[欄末帶空白]->開始->存檔[upnew.csv]->確定->離開。<br />
-　四、用記事本開啟upnew.csv->另存成uft8檔案[upnewutf8.csv]。<br />
-　　　用記事本開啟[upnewutf8.csv]，有些亂碼字搜尋取代更改完後儲存。<br />
-　五、使用本頁->瀏覽->選擇upnewutf8.csv->[上傳備份資料]。<br />
+　三、開啟 upnew.csv，刪除不要的列，如外師、技藝教師等，然後存檔。<br />
+　四、使用本頁->瀏覽->選擇upnew.csv->[上傳備份資料]。<br />
 <br />
 <font color="#0464F9">工具程式：</font>
-<a href="Csv2Csv.exe">Csv2Csv</a>、
 <a href="製作代導師上傳檔案.xlsm">製作代導師上傳檔案</a>、
 <a href="代導師時數暨商數統計表.xlsm">代導師時數暨商數統計表</a>
 <br />
@@ -58,7 +54,7 @@ function inp_bac()
 		//$items_arr=array();
 		$sql="";
 		$row=1;
-		$fp=fopen($_FILES['import']['tmp_name'],"r");
+		/*$fp=fopen($_FILES['import']['tmp_name'],"r");
 		while(($data=fgets($fp))!== FALSE)
 		{
 			if ($row>1)
@@ -75,7 +71,25 @@ function inp_bac()
 			}
 			$row++;	
 		}
-		fclose($fp);
+		fclose($fp);*/
+		if (($handle = fopen($_FILES['import']['tmp_name'],"r")) !== FALSE) 
+		{
+			while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) 
+			{
+				if ($row>1)
+				{
+					//echo $data[0].":".$data[1]."<br>";
+					if ($data[0]=="") //空白不匯入
+						continue;
+					$sql="INSERT INTO dds(o_name,d_name,d_date,d_num,d_backup) 
+					VALUES ('$data[0]','$data[1]','$data[2]','$data[3]','$data[4]')";
+					if (!$record_set =$mysqli->query($sql))
+						error_echo ("dds6.php:".__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);
+				}
+			$row++;
+			}
+		fclose($handle);
+		}
 		if ($row>2)
 			$csv_message='<li>'.date('Y/m/d h:i:s')." 已自[".$_FILES['import']['name']."]匯入CSV資料</li>";
 		else 

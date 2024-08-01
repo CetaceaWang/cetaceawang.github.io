@@ -8,7 +8,8 @@ header("Content-disposition: attachment; filename=$Filename");
 header("Content-type: text/x-csv");
 header("Pragma: no-cache");
 header("Expires: 0");
-$Content='"班級","教師名稱","時數","導師商數"'."\r\n";
+$Content="\xEF\xBB\xBF"; // UTF-8 BOM
+$Content.='"班級","教師名稱","時數","導師商數"'."\r\n";
 GetNameArray();
 GetMaxClassCount();
 GetClassDName();

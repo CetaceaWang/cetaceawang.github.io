@@ -16,8 +16,8 @@
         "dds/dds_bac.php": 1.04,
         "dds/製作代導師上傳檔案.xlsm": 1.05,
         "dds/代導師時數暨商數統計表.xlsm": 1.05,
-        "dds/Csv2Csv.exe": 1.04,
-        "dds/ExportToCsv.php": 1.03,
+        "dds/ExportToCsv.php": 1.05,
+        "dds/ddscsv.php": 1.05,
         "index.html": 1.01
     }
 }
