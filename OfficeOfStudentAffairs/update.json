@@ -1,15 +1,15 @@
 {
-  "version": 1.05,
+  "version": 1.06,
     "update": {
         "update.php": 1.04,
         "cleord/allstat.php": 1.01,
-        "cleord/grade.php": 1.02,
+        "cleord/grade.php": 1.06,
         "cleord/inscore.php": 1.02,
         "cleord/outalldoc.php": 1.01,
-        "cleord/outdoc.php": 1.02,
-        "cleord/outtxt.php": 1.02,
+        "cleord/outdoc.php": 1.06,
+        "cleord/outtxt.php": 1.06,
         "cleord/outxls.php": 1.02,
-        "cleord/setone.php": 1.03,
+        "cleord/setone.php": 1.06,
         "cleord/statistics.php": 1.02,
         "dds/dds5.php": 1.03,
         "dds/dds6.php": 1.05,
@@ -18,6 +18,6 @@
         "dds/代導師時數暨商數統計表.xlsm": 1.05,
         "dds/ExportToCsv.php": 1.05,
         "dds/ddscsv.php": 1.05,
-        "index.html": 1.01
+        "index.html": 1.06
     }
 }

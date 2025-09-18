@@ -56,10 +56,15 @@ if (isset($_REQUEST["selweek"]) && $_REQUEST["selweek"]!="")
 			}
 		echo '</tr></table>';
 		$out_text='<form id="outdoc" name="outdoc" method="post" action="outdoc.php"><input type="hidden" name="curryear" value="'.$curryear.'">
-		<input type="hidden" name="currseme" value="'.$currseme.'"><input type="hidden" name="weeksub" value="'.$_REQUEST["selweek"].'"><input type="hidden" name="classnum[1]" value="'.$classnum[1].'"><input type="hidden" name="classnum[2]" value="'.$classnum[2].'"><input type="hidden" name="classnum[3]" value="'.$classnum[3].'">';
+		<input type="hidden" name="currseme" value="'.$currseme.'"><input type="hidden" name="weeksub" value="'.$_REQUEST["selweek"].'">
+		<input type="hidden" name="classnum[1]" value="'.$classnum[1].'"><input type="hidden" name="classnum[2]" value="'.$classnum[2].'">
+		<input type="hidden" name="classnum[3]" value="'.$classnum[3].'">';
 		//<input type="hidden" name="filesub" value="'.$_REQUEST["selcleord"].'"> 不知道幹嘛的
-		$out_text.='<input type="submit" name="send"  value="輸出doc" /></form><form id="outtxt" name="outtxt" method="post" action="outtxt.php"><input type="hidden" name="curryear" value="'.$curryear.'">
-		<input type="hidden" name="currseme" value="'.$currseme.'"><input type="hidden" name="weeksub" value="'.$_REQUEST["selweek"].'"><input type="hidden" name="classnum[1]" value="'.$classnum[1].'"><input type="hidden" name="classnum[2]" value="'.$classnum[2].'"><input type="hidden" name="classnum[3]" value="'.$classnum[3].'">';
+		$out_text.='<input type="submit" name="send"  value="輸出doc" /></form>
+		<form id="outtxt" name="outtxt" method="post" action="outtxt.php"><input type="hidden" name="curryear" value="'.$curryear.'">
+		<input type="hidden" name="currseme" value="'.$currseme.'"><input type="hidden" name="weeksub" value="'.$_REQUEST["selweek"].'">
+		<input type="hidden" name="classnum[1]" value="'.$classnum[1].'"><input type="hidden" name="classnum[2]" value="'.$classnum[2].'">
+		<input type="hidden" name="classnum[3]" value="'.$classnum[3].'">';
 		//<input type="hidden" name="filesub" value="'.$_REQUEST["selcleord"].'">
 		$out_text.='<input type="submit" name="send"  value="輸出校務公告" /></form>';
 		echo $out_text;
@@ -129,7 +134,8 @@ function findnor($j,$i)
 	global $mysqli;
 	$stagedn=$j."00";
 	$stageup=($j+1)."00";	
-	$sql_select = "select class from cleord  WHERE week='".$_REQUEST["selweek"]."' AND kind='".$i."' AND class>".$stagedn." AND class<".$stageup." AND rank='優等' ORDER BY tscore DESC ";
+	$sql_select = "select class from cleord  WHERE week='".$_REQUEST["selweek"]."' AND kind='".$i."' AND class>".$stagedn." AND class<".$stageup." AND rank='優等' 
+	ORDER BY class ASC ";
 	if (!$record_set =$mysqli->query($sql_select))
 		error_echo ($_SERVER['PHP_SELF'].__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);
 	$rtxt="";

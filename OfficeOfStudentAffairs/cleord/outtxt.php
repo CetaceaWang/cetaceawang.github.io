@@ -98,7 +98,8 @@ function findnor($j,$i)
 	global $mysqli;
 	$stagedn=$j."00";
 	$stageup=($j+1)."00";	
-	$sql_select = "select class from cleord  WHERE week='".$_REQUEST["selweek"]."' AND kind='".$i."' AND class>".$stagedn." AND class<".$stageup." AND rank='優等' ORDER BY tscore DESC ";
+	$sql_select = "select class from cleord  WHERE week='".$_REQUEST["selweek"]."' AND kind='".$i."' AND class>".$stagedn." AND class<".$stageup." AND rank='優等' 
+	ORDER BY class ASC";
 	if (!$record_set =$mysqli->query($sql_select))
 		error_echo ($_SERVER['PHP_SELF'].__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);
 	$rtxt="";

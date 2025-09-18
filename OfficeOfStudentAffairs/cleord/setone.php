@@ -5,7 +5,7 @@ SelectMenu("setone.php","期初設定");
 $mysqli = new mysqli($DB_SERVER,$DB_LOGIN,$DB_PASSWORD,$DB_NAME);
 if ($mysqli->connect_errno) {echo "連接資料庫失敗: (" . $mysqli->connect_errno . ") " . $mysqli->connect_error;exit();}
 if (!$mysqli->set_charset("utf8")) {printf("資料庫設定無法設定utf8編碼: %s\r\n", $mysqli->error);exit();}
-$RemoteUrl="https://cingyue.lionfree.net/OfficeOfStudentAffairs/cleord/";
+$RemoteUrl="https://cingyue.cc/OfficeOfStudentAffairs/cleord/";
 $echo_text="";
 $echo_text_end="";
 $BackupText="";
@@ -71,7 +71,7 @@ FootCode();
 function BackupToRemote($UploadUrl){
 	$FileContents=BackupFile("cleord.sql");
 	//由於 lionfree 阻擋
-	//UploadFile($FileContents,$UploadUrl);
+	UploadFile($FileContents,$UploadUrl);
 }
 function RestoreFromRemote($DownloadUrl){
 	global $BackupText,$mysqli;
@@ -120,9 +120,9 @@ function UploadFile($Contents,$UploadUrl){
 	curl_close ($ch);
 	print_r($result);
 	if($result)
-		$BackupText .= Message("備份上傳成功");
+		$BackupText .= Message("備份上傳成功(cingyue.cc)");
 	else
-		$BackupText .= Message("備份上傳失敗","red");
+		$BackupText .= Message("備份上傳失敗(cingyue.cc)","red");
 }
 function Message($Text,$Color="blue"){
 	return '<font color="'.$Color.'">'.$Text.'</font>'."<BR>";
