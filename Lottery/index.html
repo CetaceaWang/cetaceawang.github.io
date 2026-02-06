@@ -2,110 +2,231 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>企業級抽獎系統</title>
+    <title>全功能抽獎系統 v2</title>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .winner-anim { animation: bounce 0.5s ease-in-out; }
-        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .winner-anim { animation: celebrate 0.6s ease-in-out; }
+        @keyframes celebrate { 0% { transform: scale(0.5); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-8">
-    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
-        <h1 class="text-3xl font-bold text-center text-indigo-600 mb-8">🎁 專業抽獎系統</h1>
+<body class="bg-slate-100 min-h-screen p-4 md:p-8 font-sans">
+    <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl p-6">
+        <h1 class="text-4xl font-black text-center text-indigo-700 mb-8 tracking-wider">🏆 專業抽獎系統 2.0</h1>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div class="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center">
-                <p class="mb-2 font-semibold">1. 匯入名單 (Excel/CSV)</p>
-                <input type="file" id="memberFile" accept=".xlsx, .xls, .csv" class="text-sm">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="bg-indigo-50 p-5 rounded-xl border border-indigo-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-xl font-bold text-indigo-800">👥 參加者名單</h2>
+                    <input type="file" id="memberFile" accept=".xlsx, .xls, .csv" class="hidden">
+                    <button onclick="document.getElementById('memberFile').click()" class="text-xs bg-indigo-200 hover:bg-indigo-300 px-2 py-1 rounded">匯入 Excel</button>
+                </div>
+                <textarea id="memberTextarea" placeholder="請輸入姓名（一人一行，或從 Excel 匯入）" 
+                    class="w-full h-40 p-3 rounded border focus:ring-2 focus:ring-indigo-400 outline-none text-sm"></textarea>
+                <div id="memberCount" class="text-right text-xs text-indigo-600 mt-1 font-bold">目前人數：0</div>
             </div>
-            <div class="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center">
-                <p class="mb-2 font-semibold">2. 匯入獎項 (Excel/CSV)</p>
-                <input type="file" id="prizeFile" accept=".xlsx, .xls, .csv" class="text-sm">
+
+            <div class="bg-amber-50 p-5 rounded-xl border border-amber-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-xl font-bold text-amber-800">🎁 獎項與數量</h2>
+                    <input type="file" id="prizeFile" accept=".xlsx, .xls, .csv" class="hidden">
+                    <button onclick="document.getElementById('prizeFile').click()" class="text-xs bg-amber-200 hover:bg-amber-300 px-2 py-1 rounded">匯入 Excel</button>
+                </div>
+                <div class="grid grid-cols-4 gap-2 mb-2 text-xs font-bold text-amber-700 px-2">
+                    <div class="col-span-3">獎項名稱</div>
+                    <div>數量</div>
+                </div>
+                <div id="prizeList" class="space-y-2 h-40 overflow-y-auto">
+                    <div class="grid grid-cols-4 gap-2">
+                        <input type="text" class="p-name col-span-3 p-1 rounded border text-sm" placeholder="例如：頭獎 iPhone">
+                        <input type="number" class="p-count p-1 rounded border text-sm" value="1">
+                    </div>
+                </div>
+                <button onclick="addPrizeRow()" class="w-full mt-2 text-xs py-1 bg-white border border-amber-300 rounded text-amber-700 hover:bg-amber-100">+ 新增獎項</button>
             </div>
         </div>
 
-        <div class="flex justify-around mb-8 text-sm text-gray-600">
-            <div id="memberCount">名單人數：0</div>
-            <div id="prizeCount">待抽獎項：0</div>
+        <div class="text-center py-10 border-y border-gray-100">
+            <div class="mb-4">
+                <label class="text-gray-500 text-sm block mb-1">正在抽取：</label>
+                <select id="prizeSelect" class="p-3 border-2 border-indigo-500 rounded-lg w-72 text-lg font-bold bg-white"></select>
+            </div>
+            
+            <div id="result" class="h-24 flex items-center justify-center text-5xl font-black text-red-600 mb-6 drop-shadow-sm">
+                準備就緒
+            </div>
+
+            <div class="flex justify-center gap-4">
+                <button onclick="draw()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-full text-2xl font-bold shadow-lg transition transform hover:scale-105 active:scale-95">
+                    🎰 開始抽獎
+                </button>
+                <button onclick="resetSystem()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-4 rounded-full text-lg font-bold transition">
+                    🔄 重置抽獎
+                </button>
+            </div>
         </div>
 
-        <div class="text-center">
-            <select id="prizeSelect" class="p-2 border rounded mb-4 w-64"></select>
-            <br>
-            <button onclick="draw()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full text-xl font-bold transition">
-                開始抽獎
-            </button>
-        </div>
-
-        <div id="result" class="mt-12 text-center text-4xl font-bold text-red-500 min-h-[60px]"></div>
-        
         <div class="mt-8">
-            <h3 class="font-bold mb-2">中獎紀錄：</h3>
-            <ul id="history" class="bg-gray-50 p-4 rounded h-48 overflow-y-auto border"></ul>
+            <div class="flex justify-between items-end mb-3">
+                <h3 class="text-lg font-bold text-gray-700">📜 中獎紀錄：</h3>
+                <button onclick="exportHistory()" class="text-sm text-indigo-600 hover:underline">匯出中獎名單</button>
+            </div>
+            <ul id="history" class="bg-gray-50 p-4 rounded-xl h-48 overflow-y-auto border border-gray-200 space-y-1 text-sm"></ul>
         </div>
     </div>
 
     <script>
-        let members = [];
-        let prizes = [];
+        let initialMembers = []; // 原始備份
+        let currentMembers = []; 
+        let currentPrizes = [];
+        let history = [];
 
         // 讀取 Excel 通用函式
         function handleFile(e, callback) {
             const file = e.target.files[0];
             const reader = new FileReader();
             reader.onload = (evt) => {
-                const data = evt.target.result;
-                const workbook = XLSX.read(data, { type: 'binary' });
+                const workbook = XLSX.read(evt.target.result, { type: 'binary' });
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
                 callback(XLSX.utils.sheet_to_json(sheet));
             };
             reader.readAsBinaryString(file);
         }
 
+        // 處理名單匯入
         document.getElementById('memberFile').addEventListener('change', (e) => {
             handleFile(e, (data) => {
-                members = data.map(row => row['姓名'] || row['Name']);
-                document.getElementById('memberCount').innerText = `名單人數：${members.length}`;
+                const names = data.map(row => row['姓名'] || row['Name'] || Object.values(row)[0]);
+                document.getElementById('memberTextarea').value = names.join('\n');
+                updateMemberCount();
             });
         });
 
+        // 處理獎項匯入
         document.getElementById('prizeFile').addEventListener('change', (e) => {
             handleFile(e, (data) => {
-                prizes = data; // 格式預期：{ 獎項名稱: 'iPhone', 數量: 5 }
-                updatePrizeUI();
+                const list = document.getElementById('prizeList');
+                list.innerHTML = '';
+                data.forEach(row => {
+                    const name = row['獎項名稱'] || row['Item'] || Object.values(row)[0];
+                    const count = row['數量'] || row['Count'] || Object.values(row)[1];
+                    addPrizeRow(name, count);
+                });
+                syncPrizes();
             });
         });
 
-        function updatePrizeUI() {
+        function addPrizeRow(name = '', count = 1) {
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-4 gap-2';
+            div.innerHTML = `
+                <input type="text" class="p-name col-span-3 p-1 rounded border text-sm" value="${name}" placeholder="獎項名稱">
+                <input type="number" class="p-count p-1 rounded border text-sm" value="${count}">
+            `;
+            document.getElementById('prizeList').appendChild(div);
+        }
+
+        function updateMemberCount() {
+            const text = document.getElementById('memberTextarea').value;
+            const count = text.split('\n').filter(n => n.trim() !== '').length;
+            document.getElementById('memberCount').innerText = `目前人數：${count}`;
+        }
+
+        document.getElementById('memberTextarea').addEventListener('input', updateMemberCount);
+
+        function syncPrizes() {
+            const names = document.querySelectorAll('.p-name');
+            const counts = document.querySelectorAll('.p-count');
+            currentPrizes = [];
+            names.forEach((el, i) => {
+                if (el.value.trim() !== '') {
+                    currentPrizes.push({ name: el.value, count: parseInt(counts[i].value), originalCount: parseInt(counts[i].value) });
+                }
+            });
+            updatePrizeSelect();
+        }
+
+        function updatePrizeSelect() {
             const select = document.getElementById('prizeSelect');
-            select.innerHTML = prizes.map((p, i) => `<option value="${i}">${p['獎項名稱']} (剩餘 ${p['數量']})</option>`).join('');
-            document.getElementById('prizeCount').innerText = `待抽獎項：${prizes.reduce((a, b) => a + parseInt(b['數量']), 0)}`;
+            select.innerHTML = currentPrizes.map((p, i) => 
+                `<option value="${i}">${p.name} (剩 ${p.count})</option>`
+            ).join('');
+        }
+
+        // 重置功能：不需重新匯入，但恢復數據
+        function resetSystem() {
+            if (!confirm("確定要重置嗎？這將會清空所有中獎紀錄，並還原剩餘人數與獎項數量。")) return;
+            
+            // 從文字框重新讀取名單
+            currentMembers = document.getElementById('memberTextarea').value.split('\n').filter(n => n.trim() !== '');
+            
+            // 從編輯區重新同步獎項
+            const names = document.querySelectorAll('.p-name');
+            const counts = document.querySelectorAll('.p-count');
+            currentPrizes = [];
+            names.forEach((el, i) => {
+                if (el.value.trim() !== '') {
+                    currentPrizes.push({ 
+                        name: el.value, 
+                        count: parseInt(counts[i].value), 
+                        originalCount: parseInt(counts[i].value) 
+                    });
+                }
+            });
+
+            // 清除歷史與介面
+            history = [];
+            document.getElementById('history').innerHTML = '';
+            document.getElementById('result').innerText = '準備就緒';
+            updatePrizeSelect();
+            updateMemberCount();
+            alert("系統已重置！");
         }
 
         function draw() {
-            if (members.length === 0) return alert("名單為空！");
-            const prizeIdx = document.getElementById('prizeSelect').value;
-            if (prizes[prizeIdx]['數量'] <= 0) return alert("該獎項已抽完！");
+            // 每次抽獎前檢查一下是否有同步最新名單 (如果使用者剛編輯完沒按重置)
+            if (history.length === 0 && currentMembers.length === 0) {
+                currentMembers = document.getElementById('memberTextarea').value.split('\n').filter(n => n.trim() !== '');
+                syncPrizes();
+            }
 
-            // 隨機抽取
-            const winnerIdx = Math.floor(Math.random() * members.length);
-            const winner = members.splice(winnerIdx, 1)[0]; // 抽後移除，不重複中獎
-            
-            prizes[prizeIdx]['數量']--;
-            
-            // 顯示結果
+            if (currentMembers.length === 0) return alert("沒有剩餘名單可供抽獎！請新增名單或點擊重置。");
+            if (currentPrizes.length === 0) return alert("請先設定獎項。");
+
+            const prizeIdx = document.getElementById('prizeSelect').value;
+            const prize = currentPrizes[prizeIdx];
+
+            if (prize.count <= 0) return alert("該獎項已抽完！");
+
+            // 抽獎邏輯
+            const winIdx = Math.floor(Math.random() * currentMembers.length);
+            const winner = currentMembers.splice(winIdx, 1)[0];
+            prize.count--;
+
+            // 更新介面
             const resDiv = document.getElementById('result');
             resDiv.innerText = `🎊 ${winner} 🎊`;
+            resDiv.classList.remove('winner-anim');
+            void resDiv.offsetWidth; // 強制重繪觸發動畫
             resDiv.classList.add('winner-anim');
-            setTimeout(() => resDiv.classList.remove('winner-anim'), 500);
 
-            // 紀錄
-            const history = document.getElementById('history');
-            history.innerHTML = `<li>${prizes[prizeIdx]['獎項名稱']}: ${winner}</li>` + history.innerHTML;
-            
-            updatePrizeUI();
-            document.getElementById('memberCount').innerText = `名單人數：${members.length}`;
+            const hList = document.getElementById('history');
+            const log = `[${prize.name}] ${winner}`;
+            history.push(log);
+            hList.innerHTML = `<li class="border-b py-1 border-gray-100 font-medium text-gray-600"><span class="text-indigo-500">#${history.length}</span> ${log}</li>` + hList.innerHTML;
+
+            updatePrizeSelect();
+            updateMemberCount();
+        }
+
+        function exportHistory() {
+            if (history.length === 0) return alert("目前沒有紀錄可匯出");
+            const blob = new Blob([history.join('\n')], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '中獎名單.txt';
+            a.click();
         }
     </script>
 </body>
