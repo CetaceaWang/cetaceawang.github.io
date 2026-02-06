@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>企業級抽獎系統</title>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .winner-anim { animation: bounce 0.5s ease-in-out; }
+        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
+        <h1 class="text-3xl font-bold text-center text-indigo-600 mb-8">🎁 專業抽獎系統</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center">
+                <p class="mb-2 font-semibold">1. 匯入名單 (Excel/CSV)</p>
+                <input type="file" id="memberFile" accept=".xlsx, .xls, .csv" class="text-sm">
+            </div>
+            <div class="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center">
+                <p class="mb-2 font-semibold">2. 匯入獎項 (Excel/CSV)</p>
+                <input type="file" id="prizeFile" accept=".xlsx, .xls, .csv" class="text-sm">
+            </div>
+        </div>
+
+        <div class="flex justify-around mb-8 text-sm text-gray-600">
+            <div id="memberCount">名單人數：0</div>
+            <div id="prizeCount">待抽獎項：0</div>
+        </div>
+
+        <div class="text-center">
+            <select id="prizeSelect" class="p-2 border rounded mb-4 w-64"></select>
+            <br>
+            <button onclick="draw()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full text-xl font-bold transition">
+                開始抽獎
+            </button>
+        </div>
+
+        <div id="result" class="mt-12 text-center text-4xl font-bold text-red-500 min-h-[60px]"></div>
+        
+        <div class="mt-8">
+            <h3 class="font-bold mb-2">中獎紀錄：</h3>
+            <ul id="history" class="bg-gray-50 p-4 rounded h-48 overflow-y-auto border"></ul>
+        </div>
+    </div>
+
+    <script>
+        let members = [];
+        let prizes = [];
+
+        // 讀取 Excel 通用函式
+        function handleFile(e, callback) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const data = evt.target.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                callback(XLSX.utils.sheet_to_json(sheet));
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        document.getElementById('memberFile').addEventListener('change', (e) => {
+            handleFile(e, (data) => {
+                members = data.map(row => row['姓名'] || row['Name']);
+                document.getElementById('memberCount').innerText = `名單人數：${members.length}`;
+            });
+        });
+
+        document.getElementById('prizeFile').addEventListener('change', (e) => {
+            handleFile(e, (data) => {
+                prizes = data; // 格式預期：{ 獎項名稱: 'iPhone', 數量: 5 }
+                updatePrizeUI();
+            });
+        });
+
+        function updatePrizeUI() {
+            const select = document.getElementById('prizeSelect');
+            select.innerHTML = prizes.map((p, i) => `<option value="${i}">${p['獎項名稱']} (剩餘 ${p['數量']})</option>`).join('');
+            document.getElementById('prizeCount').innerText = `待抽獎項：${prizes.reduce((a, b) => a + parseInt(b['數量']), 0)}`;
+        }
+
+        function draw() {
+            if (members.length === 0) return alert("名單為空！");
+            const prizeIdx = document.getElementById('prizeSelect').value;
+            if (prizes[prizeIdx]['數量'] <= 0) return alert("該獎項已抽完！");
+
+            // 隨機抽取
+            const winnerIdx = Math.floor(Math.random() * members.length);
+            const winner = members.splice(winnerIdx, 1)[0]; // 抽後移除，不重複中獎
+            
+            prizes[prizeIdx]['數量']--;
+            
+            // 顯示結果
+            const resDiv = document.getElementById('result');
+            resDiv.innerText = `🎊 ${winner} 🎊`;
+            resDiv.classList.add('winner-anim');
+            setTimeout(() => resDiv.classList.remove('winner-anim'), 500);
+
+            // 紀錄
+            const history = document.getElementById('history');
+            history.innerHTML = `<li>${prizes[prizeIdx]['獎項名稱']}: ${winner}</li>` + history.innerHTML;
+            
+            updatePrizeUI();
+            document.getElementById('memberCount').innerText = `名單人數：${members.length}`;
+        }
+    </script>
+</body>
+</html>
