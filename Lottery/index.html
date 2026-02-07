@@ -2,88 +2,119 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>全功能抽獎系統 v2</title>
+    <title>專業抽獎系統 v2.1</title>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .winner-anim { animation: celebrate 0.6s ease-in-out; }
         @keyframes celebrate { 0% { transform: scale(0.5); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        /* 隱藏捲軸但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4 md:p-8 font-sans">
-    <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl p-6">
-        <h1 class="text-4xl font-black text-center text-indigo-700 mb-8 tracking-wider">🏆 專業抽獎系統 2.0</h1>
+<body class="bg-slate-50 min-h-screen p-4 md:p-8 font-sans">
+    <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
+        
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <h1 class="text-4xl font-black text-indigo-700 tracking-wider">🏆 專業抽獎系統</h1>
+            <details class="bg-amber-50 border border-amber-200 rounded-lg p-2 w-full md:w-auto">
+                <summary class="cursor-pointer text-amber-800 font-bold text-sm select-none">💡 快速使用小技巧 (點擊展開)</summary>
+                <ul class="text-xs text-amber-900 mt-2 space-y-1 list-disc list-inside leading-relaxed">
+                    <li><b>格式建議：</b>Excel 檔案第一列請放「姓名」或「獎項名稱」。</li>
+                    <li><b>快速編輯：</b>直接在名單框輸入名字，按 Enter 換行即可新增。</li>
+                    <li><b>公平機制：</b>系統會自動移除已中獎者，確保不會重複中獎。</li>
+                    <li><b>強制同步：</b>編輯完名單或獎項數量後，請務必點擊「🔄 重置抽獎」生效。</li>
+                    <li><b>緊急修正：</b>若抽獎過程中斷，只要不重新整理網頁，紀錄都會保留。</li>
+                </ul>
+            </details>
+        </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div class="bg-indigo-50 p-5 rounded-xl border border-indigo-100">
+            <div class="bg-indigo-50 p-5 rounded-xl border border-indigo-100 shadow-sm">
                 <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-xl font-bold text-indigo-800">👥 參加者名單</h2>
-                    <input type="file" id="memberFile" accept=".xlsx, .xls, .csv" class="hidden">
-                    <button onclick="document.getElementById('memberFile').click()" class="text-xs bg-indigo-200 hover:bg-indigo-300 px-2 py-1 rounded">匯入 Excel</button>
-                </div>
-                <textarea id="memberTextarea" placeholder="請輸入姓名（一人一行，或從 Excel 匯入）" 
-                    class="w-full h-40 p-3 rounded border focus:ring-2 focus:ring-indigo-400 outline-none text-sm"></textarea>
-                <div id="memberCount" class="text-right text-xs text-indigo-600 mt-1 font-bold">目前人數：0</div>
-            </div>
-
-            <div class="bg-amber-50 p-5 rounded-xl border border-amber-100">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-xl font-bold text-amber-800">🎁 獎項與數量</h2>
-                    <input type="file" id="prizeFile" accept=".xlsx, .xls, .csv" class="hidden">
-                    <button onclick="document.getElementById('prizeFile').click()" class="text-xs bg-amber-200 hover:bg-amber-300 px-2 py-1 rounded">匯入 Excel</button>
-                </div>
-                <div class="grid grid-cols-4 gap-2 mb-2 text-xs font-bold text-amber-700 px-2">
-                    <div class="col-span-3">獎項名稱</div>
-                    <div>數量</div>
-                </div>
-                <div id="prizeList" class="space-y-2 h-40 overflow-y-auto">
-                    <div class="grid grid-cols-4 gap-2">
-                        <input type="text" class="p-name col-span-3 p-1 rounded border text-sm" placeholder="例如：頭獎 iPhone">
-                        <input type="number" class="p-count p-1 rounded border text-sm" value="1">
+                    <h2 class="text-xl font-bold text-indigo-800 flex items-center gap-2">👥 參加者名單</h2>
+                    <div class="space-x-2">
+                        <input type="file" id="memberFile" accept=".xlsx, .xls, .csv" class="hidden">
+                        <button onclick="document.getElementById('memberFile').click()" class="text-xs bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition">匯入 Excel</button>
                     </div>
                 </div>
-                <button onclick="addPrizeRow()" class="w-full mt-2 text-xs py-1 bg-white border border-amber-300 rounded text-amber-700 hover:bg-amber-100">+ 新增獎項</button>
+                <textarea id="memberTextarea" placeholder="請輸入姓名（一人一行，或從 Excel 匯入）" 
+                    class="w-full h-48 p-4 rounded-lg border-2 border-indigo-100 focus:border-indigo-400 outline-none text-sm leading-relaxed"></textarea>
+                <div id="memberCount" class="text-right text-sm text-indigo-600 mt-2 font-black">目前人數：0</div>
+            </div>
+
+            <div class="bg-emerald-50 p-5 rounded-xl border border-emerald-100 shadow-sm">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-xl font-bold text-emerald-800 flex items-center gap-2">🎁 獎項清單</h2>
+                    <div class="space-x-2">
+                        <input type="file" id="prizeFile" accept=".xlsx, .xls, .csv" class="hidden">
+                        <button onclick="document.getElementById('prizeFile').click()" class="text-xs bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded-lg transition">匯入 Excel</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-12 gap-2 mb-2 text-xs font-bold text-emerald-700 px-2">
+                    <div class="col-span-8">獎項名稱</div>
+                    <div class="col-span-4 text-center">初始數量</div>
+                </div>
+                <div id="prizeList" class="space-y-2 h-40 overflow-y-auto pr-2 no-scrollbar">
+                    <div class="grid grid-cols-12 gap-2">
+                        <input type="text" class="p-name col-span-8 p-2 rounded border border-emerald-200 text-sm focus:ring-1 focus:ring-emerald-400 outline-none" placeholder="例如：頭獎 iPhone">
+                        <input type="number" class="p-count col-span-4 p-2 rounded border border-emerald-200 text-sm text-center" value="1">
+                    </div>
+                </div>
+                <button onclick="addPrizeRow()" class="w-full mt-3 text-sm py-2 bg-white border-2 border-dashed border-emerald-300 rounded-lg text-emerald-700 hover:bg-emerald-100 transition font-medium">+ 新增獎項</button>
             </div>
         </div>
 
-        <div class="text-center py-10 border-y border-gray-100">
-            <div class="mb-4">
-                <label class="text-gray-500 text-sm block mb-1">正在抽取：</label>
-                <select id="prizeSelect" class="p-3 border-2 border-indigo-500 rounded-lg w-72 text-lg font-bold bg-white"></select>
-            </div>
-            
-            <div id="result" class="h-24 flex items-center justify-center text-5xl font-black text-red-600 mb-6 drop-shadow-sm">
-                準備就緒
-            </div>
+        <div class="bg-slate-800 rounded-2xl p-8 text-center shadow-xl mb-8 relative overflow-hidden">
+            <div class="relative z-10">
+                <div class="mb-6 inline-block bg-slate-700 px-6 py-2 rounded-full border border-slate-600">
+                    <label class="text-slate-400 text-xs block mb-1 uppercase tracking-widest">Current Selection</label>
+                    <select id="prizeSelect" class="bg-transparent text-white text-xl font-bold outline-none cursor-pointer"></select>
+                </div>
+                
+                <div id="result" class="h-32 flex items-center justify-center text-6xl font-black text-yellow-400 mb-8 drop-shadow-[0_2px_10px_rgba(250,204,21,0.4)]">
+                    READY
+                </div>
 
-            <div class="flex justify-center gap-4">
-                <button onclick="draw()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-full text-2xl font-bold shadow-lg transition transform hover:scale-105 active:scale-95">
-                    🎰 開始抽獎
-                </button>
-                <button onclick="resetSystem()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-4 rounded-full text-lg font-bold transition">
-                    🔄 重置抽獎
-                </button>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <button onclick="draw()" class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-12 py-4 rounded-xl text-2xl font-black shadow-lg transition transform hover:scale-105 active:scale-95">
+                        🎰 開始抽獎
+                    </button>
+                    <button onclick="resetSystem()" class="bg-slate-600 hover:bg-slate-500 text-slate-200 px-8 py-4 rounded-xl text-lg font-bold transition">
+                        🔄 重置系統
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div class="mt-8">
-            <div class="flex justify-between items-end mb-3">
-                <h3 class="text-lg font-bold text-gray-700">📜 中獎紀錄：</h3>
-                <button onclick="exportHistory()" class="text-sm text-indigo-600 hover:underline">匯出中獎名單</button>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-slate-700 flex items-center gap-2">📜 中獎紀錄</h3>
+                    <button onclick="exportHistory()" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 underline underline-offset-4">匯出紀錄 (.txt)</button>
+                </div>
+                <ul id="history" class="bg-slate-50 p-4 rounded-xl h-64 overflow-y-auto border border-slate-200 space-y-2"></ul>
             </div>
-            <ul id="history" class="bg-gray-50 p-4 rounded-xl h-48 overflow-y-auto border border-gray-200 space-y-1 text-sm"></ul>
+            <div class="bg-slate-100 p-5 rounded-xl border border-slate-200 h-full">
+                <h4 class="font-bold text-slate-700 mb-2 border-b border-slate-300 pb-1 italic">Quick Tips</h4>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    1. 匯入 Excel 後若資料沒出現，請檢查第一行是否為標題。<br><br>
+                    2. 若要進行「第二輪」抽獎，請點擊重置按鈕來清空舊紀錄。<br><br>
+                    3. 抽中名字後，該名字會自動從名單移除，保證不重複。
+                </p>
+            </div>
         </div>
     </div>
 
     <script>
-        let initialMembers = []; // 原始備份
+        // --- 邏輯保持不變，優化了 UI 響應 ---
         let currentMembers = []; 
         let currentPrizes = [];
         let history = [];
 
-        // 讀取 Excel 通用函式
         function handleFile(e, callback) {
             const file = e.target.files[0];
+            if(!file) return;
             const reader = new FileReader();
             reader.onload = (evt) => {
                 const workbook = XLSX.read(evt.target.result, { type: 'binary' });
@@ -93,7 +124,6 @@
             reader.readAsBinaryString(file);
         }
 
-        // 處理名單匯入
         document.getElementById('memberFile').addEventListener('change', (e) => {
             handleFile(e, (data) => {
                 const names = data.map(row => row['姓名'] || row['Name'] || Object.values(row)[0]);
@@ -102,7 +132,6 @@
             });
         });
 
-        // 處理獎項匯入
         document.getElementById('prizeFile').addEventListener('change', (e) => {
             handleFile(e, (data) => {
                 const list = document.getElementById('prizeList');
@@ -118,10 +147,10 @@
 
         function addPrizeRow(name = '', count = 1) {
             const div = document.createElement('div');
-            div.className = 'grid grid-cols-4 gap-2';
+            div.className = 'grid grid-cols-12 gap-2';
             div.innerHTML = `
-                <input type="text" class="p-name col-span-3 p-1 rounded border text-sm" value="${name}" placeholder="獎項名稱">
-                <input type="number" class="p-count p-1 rounded border text-sm" value="${count}">
+                <input type="text" class="p-name col-span-8 p-2 rounded border border-emerald-200 text-sm focus:ring-1 focus:ring-emerald-400 outline-none" value="${name}" placeholder="獎項名稱">
+                <input type="number" class="p-count col-span-4 p-2 rounded border border-emerald-200 text-sm text-center font-bold" value="${count}">
             `;
             document.getElementById('prizeList').appendChild(div);
         }
@@ -139,8 +168,9 @@
             const counts = document.querySelectorAll('.p-count');
             currentPrizes = [];
             names.forEach((el, i) => {
-                if (el.value.trim() !== '') {
-                    currentPrizes.push({ name: el.value, count: parseInt(counts[i].value), originalCount: parseInt(counts[i].value) });
+                const c = parseInt(counts[i].value);
+                if (el.value.trim() !== '' && !isNaN(c)) {
+                    currentPrizes.push({ name: el.value, count: c });
                 }
             });
             updatePrizeSelect();
@@ -148,90 +178,73 @@
 
         function updatePrizeSelect() {
             const select = document.getElementById('prizeSelect');
+            if (currentPrizes.length === 0) {
+                select.innerHTML = '<option>尚未設定獎項</option>';
+                return;
+            }
             select.innerHTML = currentPrizes.map((p, i) => 
-                `<option value="${i}">${p.name} (剩 ${p.count})</option>`
+                `<option value="${i}">${p.name} (剩 ${p.count} 名)</option>`
             ).join('');
         }
 
-        // 重置功能：不需重新匯入，但恢復數據
         function resetSystem() {
-            if (!confirm("確定要重置嗎？這將會清空所有中獎紀錄，並還原剩餘人數與獎項數量。")) return;
-            
-            // 從文字框重新讀取名單
+            if (!confirm("確定要重置嗎？這將會清空所有中獎紀錄，並從編輯區重新讀取名單與獎項數量。")) return;
             currentMembers = document.getElementById('memberTextarea').value.split('\n').filter(n => n.trim() !== '');
-            
-            // 從編輯區重新同步獎項
-            const names = document.querySelectorAll('.p-name');
-            const counts = document.querySelectorAll('.p-count');
-            currentPrizes = [];
-            names.forEach((el, i) => {
-                if (el.value.trim() !== '') {
-                    currentPrizes.push({ 
-                        name: el.value, 
-                        count: parseInt(counts[i].value), 
-                        originalCount: parseInt(counts[i].value) 
-                    });
-                }
-            });
-
-            // 清除歷史與介面
+            syncPrizes();
             history = [];
             document.getElementById('history').innerHTML = '';
-            document.getElementById('result').innerText = '準備就緒';
-            updatePrizeSelect();
-            updateMemberCount();
-            alert("系統已重置！");
+            document.getElementById('result').innerText = 'READY';
+            alert("數據已重新載入！");
         }
 
         function draw() {
-            // 每次抽獎前檢查一下是否有同步最新名單 (如果使用者剛編輯完沒按重置)
+            // 自動同步 (如果 user 忘了按重置)
             if (history.length === 0 && currentMembers.length === 0) {
                 currentMembers = document.getElementById('memberTextarea').value.split('\n').filter(n => n.trim() !== '');
                 syncPrizes();
             }
 
-            if (currentMembers.length === 0) return alert("沒有剩餘名單可供抽獎！請新增名單或點擊重置。");
+            if (currentMembers.length === 0) return alert("名單空了！請新增名單後按重置。");
             if (currentPrizes.length === 0) return alert("請先設定獎項。");
 
             const prizeIdx = document.getElementById('prizeSelect').value;
             const prize = currentPrizes[prizeIdx];
 
-            if (prize.count <= 0) return alert("該獎項已抽完！");
+            if (!prize || prize.count <= 0) return alert("選中的獎項已抽完！");
 
             // 抽獎邏輯
             const winIdx = Math.floor(Math.random() * currentMembers.length);
             const winner = currentMembers.splice(winIdx, 1)[0];
             prize.count--;
 
-            // 更新介面
+            // 動畫與顯示
             const resDiv = document.getElementById('result');
-            resDiv.innerText = `🎊 ${winner} 🎊`;
+            resDiv.innerText = winner;
             resDiv.classList.remove('winner-anim');
-            void resDiv.offsetWidth; // 強制重繪觸發動畫
+            void resDiv.offsetWidth; 
             resDiv.classList.add('winner-anim');
 
             const hList = document.getElementById('history');
             const log = `[${prize.name}] ${winner}`;
             history.push(log);
-            hList.innerHTML = `<li class="border-b py-1 border-gray-100 font-medium text-gray-600"><span class="text-indigo-500">#${history.length}</span> ${log}</li>` + hList.innerHTML;
+            hList.innerHTML = `<li class="p-3 bg-white border-l-4 border-indigo-500 shadow-sm flex justify-between animate-fade-in text-sm"><span class="font-bold text-slate-700">${log}</span> <span class="text-slate-400">#${history.length}</span></li>` + hList.innerHTML;
 
             updatePrizeSelect();
             updateMemberCount();
         }
 
         function exportHistory() {
-            if (history.length === 0) return alert("目前沒有紀錄可匯出");
-            const blob = new Blob([history.join('\n')], { type: 'text/plain' });
+            if (history.length === 0) return alert("目前沒有紀錄");
+            const blob = new Blob(["抽獎時間: " + new Date().toLocaleString() + "\n\n" + history.join('\n')], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = '中獎名單.txt';
+            a.download = `中獎紀錄_${new Date().getTime()}.txt`;
             a.click();
         }
+
+        // 初始化
+        updateMemberCount();
     </script>
-<p>
-<h3>
-    <font size="5">使用提示：</font>
-</h3><b>首次使用：</b>填好名單與獎項後，按一下「重置抽獎」可以確保數據完整同步。<br><b>臨時加人：</b>抽到一半想加人？直接在左側名單文字框最後一行加上姓名，然後按「重置抽獎」即可。</p>
 </body>
 </html>
