@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>線上 CSV 編輯器（UTF‑8）</title>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI"; padding: 20px; line-height: 1.6; }
+    h2 { margin-top: 32px; }
+    table { border-collapse: collapse; margin-top: 16px; }
+    td, th { border: 1px solid #ccc; padding: 4px 8px; min-width: 80px; }
+    td { background: #fafafa; }
+    td[contenteditable="true"]:focus { outline: 2px solid #4a90e2; background: #fff; }
+    .controls { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+    pre { background: #f4f4f4; padding: 12px; border-radius: 6px; overflow-x: auto; }
+    #dropZone { border: 2px dashed #aaa; padding: 20px; text-align: center; margin-top: 12px; border-radius: 8px; }
+    #dropZone.dragover { border-color: #4a90e2; background: #eef6ff; }
+  </style>
+</head>
+<body>
+
+  <h1>線上 CSV 編輯器（UTF‑8）</h1>
+
+  <div class="controls">
+    <input type="file" id="fileInput" accept=".csv" />
+    <button id="addRowBtn">新增一列</button>
+    <button id="addColBtn">新增一欄</button>
+    <button id="delRowBtn">刪除最後一列</button>
+    <button id="delColBtn">刪除最後一欄</button>
+    <button id="downloadBtn">下載 CSV（UTF‑8）</button>
+  </div>
+
+  <div id="dropZone">拖曳 CSV 到這裡</div>
+
+  <table id="csvTable"></table>
+
+  <h2>📄 CSV 檔案範例（UTF‑8）</h2>
+  <p>一般測試用：</p>
+  <pre>
+姓名,年齡,城市
+王小明,28,台北
+李小華,32,台中
+陳大文,45,高雄
+  </pre>
+
+  <p>含逗號、引號、特殊字元：</p>
+  <pre>
+商品名稱,價格,備註
+"蘋果, 特大",30,"含稅"
+"葡萄""特甜""",120,"季節限定"
+香蕉,25,""
+  </pre>
+
+  <h2>🧪 使用技巧</h2>
+
+  <ul>
+    <li>上傳前確認 CSV 編碼為 UTF‑8，避免中文亂碼。</li>
+    <li>編輯儲存格時避免按 Enter，以免插入換行符號。</li>
+    <li>若 CSV 各列欄位數不同，系統會自動補齊空欄位。</li>
+    <li>匯出時會自動處理逗號、引號、換行等 CSV 格式規則。</li>
+    <li>拖曳上傳可直接將檔案丟到上方框內。</li>
+  </ul>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const table = document.getElementById('csvTable');
+    const addRowBtn = document.getElementById('addRowBtn');
+    const addColBtn = document.getElementById('addColBtn');
+    const delRowBtn = document.getElementById('delRowBtn');
+    const delColBtn = document.getElementById('delColBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const dropZone = document.getElementById('dropZone');
+
+    function isUTF8(bytes) {
+      let i = 0;
+      while (i < bytes.length) {
+        if (bytes[i] <= 0x7F) {
+          i++;
+        } else if ((bytes[i] & 0xE0) === 0xC0) {
+          if (i + 1 >= bytes.length ||
+              (bytes[i + 1] & 0xC0) !== 0x80 ||
+              (bytes[i] & 0xFE) === 0xC0) return false;
+          i += 2;
+        } else if ((bytes[i] & 0xF0) === 0xE0) {
+          if (i + 2 >= bytes.length ||
+              (bytes[i + 1] & 0xC0) !== 0x80 ||
+              (bytes[i + 2] & 0xC0) !== 0x80) return false;
+          i += 3;
+        } else if ((bytes[i] & 0xF8) === 0xF0) {
+          if (i + 3 >= bytes.length ||
+              (bytes[i + 1] & 0xC0) !== 0x80 ||
+              (bytes[i + 2] & 0xC0) !== 0x80 ||
+              (bytes[i + 3] & 0xC0) !== 0x80) return false;
+          i += 4;
+        } else {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function parseCSV(text) {
+      return text
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .filter(line => line.trim().length > 0)
+        .map(line => line.split(','));
+    }
+
+    function toCSV(data) {
+      return data
+        .map(row =>
+          row
+            .map(cell => {
+              const c = cell ?? '';
+              if (/[",\n]/.test(c)) {
+                return '"' + c.replace(/"/g, '""') + '"';
+              }
+              return c;
+            })
+            .join(',')
+        )
+        .join('\n');
+    }
+
+    function renderTable(data) {
+      table.innerHTML = '';
+      const maxCols = Math.max(...data.map(r => r.length), 1);
+
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        for (let i = 0; i < maxCols; i++) {
+          const td = document.createElement('td');
+          td.contentEditable = 'true';
+          td.textContent = row[i] ?? '';
+          tr.appendChild(td);
+        }
+        table.appendChild(tr);
+      });
+
+      if (data.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.contentEditable = 'true';
+        tr.appendChild(td);
+        table.appendChild(tr);
+      }
+    }
+
+    function readTableData() {
+      const data = [];
+      const rows = table.querySelectorAll('tr');
+      rows.forEach(tr => {
+        const row = [];
+        tr.querySelectorAll('td').forEach(td => {
+          row.push(td.textContent.trim());
+        });
+        data.push(row);
+      });
+      return data;
+    }
+
+    function loadCSVFile(file) {
+      const reader = new FileReader();
+
+      reader.onload = evt => {
+        const buffer = evt.target.result;
+        const bytes = new Uint8Array(buffer);
+
+        if (!isUTF8(bytes)) {
+          alert("檔案不是 UTF‑8 編碼，請重新上傳 UTF‑8 CSV。");
+          return;
+        }
+
+        const text = new TextDecoder("utf-8").decode(bytes);
+        const data = parseCSV(text);
+        renderTable(data);
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) loadCSVFile(file);
+    });
+
+    addRowBtn.addEventListener('click', () => {
+      const tr = document.createElement('tr');
+      const colCount = table.querySelector('tr')?.children.length || 1;
+
+      for (let i = 0; i < colCount; i++) {
+        const td = document.createElement('td');
+        td.contentEditable = 'true';
+        tr.appendChild(td);
+      }
+
+      table.appendChild(tr);
+    });
+
+    addColBtn.addEventListener('click', () => {
+      const rows = table.querySelectorAll('tr');
+
+      if (rows.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.contentEditable = 'true';
+        tr.appendChild(td);
+        table.appendChild(tr);
+        return;
+      }
+
+      rows.forEach(tr => {
+        const td = document.createElement('td');
+        td.contentEditable = 'true';
+        tr.appendChild(td);
+      });
+    });
+
+    delRowBtn.addEventListener('click', () => {
+      const rows = table.querySelectorAll('tr');
+      if (rows.length > 1) {
+        table.removeChild(rows[rows.length - 1]);
+      }
+    });
+
+    delColBtn.addEventListener('click', () => {
+      const rows = table.querySelectorAll('tr');
+      if (rows.length === 0) return;
+
+      const colCount = rows[0].children.length;
+      if (colCount <= 1) return;
+
+      rows.forEach(tr => {
+        tr.removeChild(tr.children[colCount - 1]);
+      });
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const data = readTableData();
+      const csv = toCSV(data);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'edited.csv';
+      a.click();
+
+      URL.revokeObjectURL(url);
+    });
+
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) loadCSVFile(file);
+    });
+
+    renderTable([]);
+  </script>
+</body>
+</html>
