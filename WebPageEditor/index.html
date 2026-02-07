@@ -3,51 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>進階全功能編輯器</title>
+    <title>全功能雙向網頁編輯器</title>
     <style>
         :root {
             --primary: #4a90e2;
-            --dark: #333;
             --border: #ddd;
         }
         body {
-            font-family: -apple-system, sans-serif;
+            font-family: -apple-system, "Microsoft JhengHei", sans-serif;
             margin: 0;
             display: flex;
             flex-direction: column;
             height: 100vh;
-            background: #f4f7f6;
+            background: #f8f9fa;
         }
         /* 工具列 */
         .toolbar {
             background: #fff;
             padding: 8px 15px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
             border-bottom: 2px solid var(--border);
             flex-wrap: wrap;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .group {
             display: flex;
             gap: 4px;
             align-items: center;
-            border-right: 1px solid #eee;
-            padding-right: 10px;
+            border-right: 2px solid #eee;
+            padding-right: 8px;
+            margin-right: 4px;
         }
+        .group:last-child { border-right: none; }
+        
         select, button, input[type="color"] {
-            padding: 5px 8px;
+            padding: 5px 10px;
             border: 1px solid var(--border);
             border-radius: 4px;
             background: #fff;
             cursor: pointer;
             font-size: 14px;
         }
-        button:hover { background: #f0f0f0; }
-        .label-text { font-size: 12px; color: #666; margin-right: 4px; }
+        button:hover { background: #f0f0f0; border-color: #bbb; }
+        button:active { background: #e0e0e0; }
+        
+        .label-text { font-size: 12px; color: #888; margin-right: 4px; font-weight: bold; }
 
         /* 內容區 */
         .main-content {
@@ -64,16 +66,14 @@
             background: white;
             border-radius: 8px;
             border: 1px solid var(--border);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
         .panel-title {
-            background: #fafafa;
-            padding: 10px 15px;
+            background: #f1f3f4;
+            padding: 8px 15px;
             font-size: 13px;
             font-weight: bold;
+            color: #555;
             border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
         }
         #visual-editor {
             flex: 1;
@@ -82,8 +82,8 @@
             overflow-y: auto;
             line-height: 1.6;
         }
-        /* 表格樣式預設值 */
-        #visual-editor table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        /* 內部標籤預設樣式 */
+        #visual-editor table { border-collapse: collapse; width: 100%; }
         #visual-editor td { border: 1px solid #ccc; padding: 8px; }
 
         #html-output {
@@ -91,7 +91,7 @@
             padding: 15px;
             border: none;
             resize: none;
-            font-family: 'Consolas', 'Courier New', monospace;
+            font-family: 'Consolas', monospace;
             font-size: 13px;
             background: #1e1e1e;
             color: #9cdcfe;
@@ -103,23 +103,17 @@
 
 <div class="toolbar">
     <div class="group">
-        <span class="label-text">格式</span>
         <select onchange="execCmdWithArg('formatBlock', this.value); this.selectedIndex=0;">
-            <option value="" selected disabled>選擇層級</option>
-            <option value="H1">標題 1 (H1)</option>
-            <option value="H2">標題 2 (H2)</option>
-            <option value="H3">標題 3 (H3)</option>
-            <option value="P">段落 (P)</option>
+            <option value="" selected disabled>標題層級</option>
+            <option value="H1">標題 1</option>
+            <option value="H2">標題 2</option>
+            <option value="P">一般段落</option>
         </select>
-    </div>
-
-    <div class="group">
-        <span class="label-text">大小</span>
         <select onchange="execCmdWithArg('fontSize', this.value); this.selectedIndex=0;">
             <option value="" selected disabled>字體大小</option>
             <option value="1">極小</option>
             <option value="3">標準</option>
-            <option value="5">大</option>
+            <option value="5">較大</option>
             <option value="7">特大</option>
         </select>
     </div>
@@ -127,24 +121,31 @@
     <div class="group">
         <button onclick="execCmd('bold')" title="粗體"><b>B</b></button>
         <button onclick="execCmd('italic')" title="斜體"><i>I</i></button>
-        <input type="color" onchange="execCmdWithArg('foreColor', this.value)" title="文字顏色">
+        <input type="color" onchange="execCmdWithArg('foreColor', this.value)" title="顏色">
     </div>
 
     <div class="group">
-        <button onclick="insertLink()">🔗 連結</button>
-        <button onclick="insertImage()">🖼️ 圖片</button>
+        <span class="label-text">對齊</span>
+        <button onclick="execCmd('justifyLeft')" title="靠左對齊">├</button>
+        <button onclick="execCmd('justifyCenter')" title="置中對齊">┼</button>
+        <button onclick="execCmd('justifyRight')" title="靠右對齊">┤</button>
+    </div>
+
+    <div class="group">
+        <button onclick="insertLink()">🔗</button>
+        <button onclick="insertImage()">🖼️</button>
         <button onclick="insertTable()">📊 表格</button>
     </div>
 
-    <button onclick="execCmd('removeFormat')" style="color: #d9534f;">清除格式</button>
+    <button onclick="execCmd('removeFormat')" style="color: #d9534f; border-color: #f5c6cb;">清除格式</button>
 </div>
 
 <div class="main-content">
     <div class="panel">
-        <div class="panel-title">視覺化編輯器 (所見即所得)</div>
+        <div class="panel-title">視覺編輯器</div>
         <div id="visual-editor" contenteditable="true">
-            <h1>歡迎使用</h1>
-            <p>在這裡輸入內容，或是選取文字後調整<b>大小</b>與<b>標題</b>。</p>
+            <h2 style="text-align: center;">歡迎使用雙向編輯器</h2>
+            <p>選取這段文字後，點擊上方的<b>對齊按鈕</b>試看看！</p>
         </div>
     </div>
 
@@ -158,12 +159,10 @@
     const visual = document.getElementById('visual-editor');
     const html = document.getElementById('html-output');
 
-    // 即時同步
     function sync() { html.value = visual.innerHTML; }
     visual.addEventListener('input', sync);
     html.addEventListener('input', () => { visual.innerHTML = html.value; });
 
-    // 指令執行
     function execCmd(cmd) {
         document.execCommand(cmd, false, null);
         sync();
@@ -176,24 +175,23 @@
         visual.focus();
     }
 
-    // 功能函數
     function insertLink() {
-        const url = prompt("網址:", "https://");
+        const url = prompt("請輸入連結:", "https://");
         if (url) execCmdWithArg('createLink', url);
     }
 
     function insertImage() {
-        const url = prompt("圖片連結:", "https://");
+        const url = prompt("圖片網址:", "https://");
         if (url) execCmdWithArg('insertImage', url);
     }
 
     function insertTable() {
-        const r = prompt("行數:", "2"), c = prompt("列數:", "2");
+        const r = prompt("列(Rows):", "2"), c = prompt("行(Cols):", "2");
         if (r && c) {
-            let t = `<table style="width:100%; border:1px solid #ccc;">`;
+            let t = `<table style="width:100%; border:1px solid #ccc; border-collapse: collapse;">`;
             for(let i=0; i<r; i++) {
                 t += '<tr>';
-                for(let j=0; j<c; j++) t += '<td style="border:1px solid #ccc; padding:5px;">儲存格</td>';
+                for(let j=0; j<c; j++) t += '<td style="border:1px solid #ccc; padding:8px;">單元格</td>';
                 t += '</tr>';
             }
             t += '</table><p></p>';
