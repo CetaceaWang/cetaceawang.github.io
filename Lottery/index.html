@@ -1,764 +1,259 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <title>抽獎系統</title>
-  <!-- 引入 SheetJS 解析 Excel -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #ffe9f0, #f3f6ff);
-      margin: 0;
-      padding: 20px;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-      padding: 20px 24px 30px;
-    }
-    .flex {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .panel {
-      flex: 1 1 360px;
-      background: #f9fafc;
-      border-radius: 12px;
-      padding: 12px 14px 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-    }
-    .panel h2 {
-      margin-top: 0;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .panel h2 span {
-      font-size: 12px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: #e5f0ff;
-      color: #2b6cb0;
-    }
-    label {
-      font-size: 14px;
-      display: block;
-      margin: 6px 0 4px;
-    }
-    input[type="file"],
-    input[type="text"],
-    input[type="number"],
-    select {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 6px 8px;
-      border-radius: 8px;
-      border: 1px solid #d0d7e2;
-      font-size: 14px;
-    }
-    input[type="text"]:focus,
-    input[type="number"]:focus,
-    select:focus {
-      outline: none;
-      border-color: #4c6fff;
-      box-shadow: 0 0 0 2px rgba(76,111,255,0.2);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 8px;
-      font-size: 13px;
-    }
-    th, td {
-      border: 1px solid #e1e4ee;
-      padding: 4px 6px;
-      text-align: left;
-    }
-    th {
-      background: #eef2ff;
-      font-weight: 600;
-    }
-    tr:nth-child(even) {
-      background: #fafbff;
-    }
-    button {
-      border: none;
-      border-radius: 999px;
-      padding: 8px 14px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: transform 0.05s ease, box-shadow 0.1s ease, background 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    button:active {
-      transform: translateY(1px);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15) inset;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, #4c6fff, #7f5dff);
-      color: #fff;
-      box-shadow: 0 6px 14px rgba(76,111,255,0.35);
-    }
-    .btn-secondary {
-      background: #edf2ff;
-      color: #334155;
-    }
-    .btn-danger {
-      background: #fee2e2;
-      color: #b91c1c;
-    }
-    .btn-ghost {
-      background: transparent;
-      color: #64748b;
-    }
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-      align-items: center;
-    }
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      background: #e5e7eb;
-      color: #374151;
-      margin-left: 6px;
-    }
-    .winner-display {
-      margin-top: 16px;
-      padding: 16px;
-      border-radius: 12px;
-      background: radial-gradient(circle at top left, #fef3c7, #eff6ff);
-      min-height: 80px;
-      position: relative;
-      overflow: hidden;
-    }
-    .winner-name {
-      font-size: 32px;
-      font-weight: 800;
-      text-align: center;
-      letter-spacing: 2px;
-      color: #1f2933;
-      text-shadow: 0 0 12px rgba(255,255,255,0.9);
-    }
-    .winner-prize {
-      text-align: center;
-      margin-top: 4px;
-      font-size: 16px;
-      color: #4b5563;
-    }
-    .rolling {
-      animation: rolling 0.08s linear infinite;
-    }
-    @keyframes rolling {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-3px); }
-      100% { transform: translateY(0); }
-    }
-    .confetti {
-      position: absolute;
-      width: 8px;
-      height: 14px;
-      border-radius: 2px;
-      opacity: 0.9;
-      animation: fall 1.4s linear forwards;
-    }
-    @keyframes fall {
-      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(140px) rotate(360deg); opacity: 0; }
-    }
-    .winners-table {
-      max-height: 220px;
-      overflow: auto;
-      margin-top: 10px;
-      border-radius: 10px;
-      border: 1px solid #e5e7eb;
-      background: #fff;
-    }
-    .small {
-      font-size: 12px;
-      color: #6b7280;
-    }
-    .mt-8 { margin-top: 8px; }
-    .mt-12 { margin-top: 12px; }
-    .mt-16 { margin-top: 16px; }
-    .text-right { text-align: right; }
-    .text-center { text-align: center; }
-    .pill {
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      background: #e0f2fe;
-      color: #0369a1;
-    }
-    .inline-input {
-      width: 100%;
-      border: none;
-      background: transparent;
-      font-size: 13px;
-    }
-    .inline-input:focus {
-      outline: none;
-      background: #eef2ff;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專業抽獎系統 v3.0 - 慶典特效版</title>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        body { font-family: 'Noto+Sans+TC', sans-serif; }
+        .winner-anim { animation: celebrate 0.6s ease-in-out; }
+        @keyframes celebrate { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
 </head>
-<body>
-  <h1>抽獎系統</h1>
-  <div class="container">
-    <div class="flex">
-      <!-- 參加者區 -->
-      <div class="panel">
-        <h2>參加者名單 <span>Excel 或手動編輯</span></h2>
-        <label>匯入 Excel 檔（Sheet 名稱：participants）</label>
-        <input type="file" id="participantsFile" accept=".xlsx,.xls" />
-        <div class="small">
-          需包含欄位：<b>name</b>（可選：<b>id</b>, <b>group</b>）。<br>
-          會自動依「name」去除重複。
+<body class="bg-slate-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        
+        <div class="flex flex-col lg:flex-row justify-between items-start mb-8 gap-6">
+            <div>
+                <h1 class="text-4xl font-black text-indigo-800 tracking-tight">🏆 專業抽獎系統 <span class="text-sm font-normal bg-indigo-100 text-indigo-600 px-2 py-1 rounded">v3.0 FX</span></h1>
+                <p class="text-slate-500 mt-2">內建彩帶特效、名單去重與 Excel 支援</p>
+            </div>
+            
+            <details class="bg-amber-50 border border-amber-200 rounded-xl p-4 w-full lg:max-w-md shadow-sm">
+                <summary class="cursor-pointer text-amber-800 font-bold text-sm select-none">💡 操作技巧 (點擊展開)</summary>
+                <ul class="text-xs text-amber-900 mt-3 space-y-2 list-disc list-inside">
+                    <li><b>編輯後請重置：</b>修改名單或獎項後，務必點擊「🔄 重置系統」。</li>
+                    <li><b>重複名單：</b>點擊「移除重複」可自動清理多餘的相同姓名。</li>
+                    <li><b>中獎特效：</b>開獎瞬間會自動噴發彩帶！</li>
+                </ul>
+            </details>
         </div>
-        <div class="toolbar">
-          <button class="btn-secondary" id="btnAddParticipant">新增參加者</button>
-          <button class="btn-ghost" id="btnDedup">去除重複</button>
-          <span class="badge" id="participantCount">共 0 人</span>
-        </div>
-        <div class="mt-8" style="max-height: 260px; overflow:auto;">
-          <table id="participantsTable">
-            <thead>
-              <tr>
-                <th>姓名</th>
-                <th>ID（可選）</th>
-                <th>群組（可選）</th>
-                <th>刪除</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- 獎項區 -->
-      <div class="panel">
-        <h2>獎項設定 <span>可匯入 / 編輯</span></h2>
-        <label>匯入 Excel 檔（Sheet 名稱：prizes）</label>
-        <input type="file" id="prizesFile" accept=".xlsx,.xls" />
-        <div class="small">
-          需包含欄位：<b>name</b>, <b>quantity</b>（數量）。<br>
-          同一獎項一次抽完該數量。
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-slate-800">👥 參加者名單</h2>
+                    <div class="flex gap-2">
+                        <button onclick="document.getElementById('memberFile').click()" class="text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-2 rounded-lg font-bold">匯入 Excel</button>
+                        <button onclick="removeDuplicates()" class="text-xs bg-rose-50 text-rose-600 hover:bg-rose-100 px-3 py-2 rounded-lg font-bold">移除重複</button>
+                        <input type="file" id="memberFile" accept=".xlsx, .xls, .csv" class="hidden">
+                    </div>
+                </div>
+                <textarea id="memberTextarea" placeholder="請輸入姓名（每行一個）" 
+                    class="w-full h-56 p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm leading-relaxed bg-slate-50 shadow-inner"></textarea>
+                <div class="flex justify-between mt-3">
+                    <span id="dupNotice" class="text-xs text-rose-500 font-bold"></span>
+                    <div id="memberCount" class="text-sm text-slate-600 font-black">人數：0</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-slate-800">🎁 獎項設定</h2>
+                    <button onclick="document.getElementById('prizeFile').click()" class="text-xs bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-2 rounded-lg font-bold">匯入獎項</button>
+                    <input type="file" id="prizeFile" accept=".xlsx, .xls, .csv" class="hidden">
+                </div>
+                <div id="prizeList" class="space-y-3 overflow-y-auto pr-2 no-scrollbar" style="max-height: 250px;">
+                    <div class="grid grid-cols-12 gap-2">
+                        <input type="text" class="p-name col-span-8 p-2 rounded-lg border border-slate-200 text-sm" placeholder="獎項名稱">
+                        <input type="number" class="p-count col-span-4 p-2 rounded-lg border border-slate-200 text-sm text-center font-bold" value="1">
+                    </div>
+                </div>
+                <button onclick="addPrizeRow()" class="w-full mt-4 py-2 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl text-slate-500 text-sm font-medium hover:bg-slate-100">+ 新增獎項欄位</button>
+            </div>
         </div>
-        <div class="toolbar">
-          <button class="btn-secondary" id="btnAddPrize">新增獎項</button>
-          <span class="badge" id="prizeCount">共 0 個獎項</span>
+
+        <div class="bg-indigo-950 rounded-3xl p-10 text-center shadow-2xl mb-8 relative">
+            <div class="mb-6">
+                <select id="prizeSelect" class="bg-indigo-800 text-white text-xl font-black px-6 py-3 rounded-2xl border border-indigo-700 outline-none cursor-pointer"></select>
+            </div>
+            
+            <div id="result" class="h-40 flex items-center justify-center text-6xl md:text-8xl font-black text-yellow-400 mb-8 tracking-tighter drop-shadow-lg">
+                READY
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button onclick="draw()" class="bg-yellow-400 hover:bg-yellow-300 text-indigo-950 px-16 py-5 rounded-2xl text-3xl font-black shadow-[0_8px_0_rgb(202,138,4)] active:translate-y-1 active:shadow-none transition-all">
+                    🎰 開始抽獎
+                </button>
+                <button onclick="resetSystem()" class="bg-indigo-700 hover:bg-indigo-600 text-white px-8 py-5 rounded-2xl text-lg font-bold">
+                    🔄 重置系統
+                </button>
+            </div>
         </div>
-        <div class="mt-8" style="max-height: 260px; overflow:auto;">
-          <table id="prizesTable">
-            <thead>
-              <tr>
-                <th>獎項名稱</th>
-                <th>數量</th>
-                <th>刪除</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-slate-800">📜 中獎紀錄</h3>
+                <button onclick="exportHistory()" class="text-sm font-bold text-indigo-600 hover:underline">匯出 (.txt)</button>
+            </div>
+            <ul id="history" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 h-64 overflow-y-auto no-scrollbar"></ul>
         </div>
-      </div>
     </div>
-<div style="margin: 20px 0; padding: 12px; background: #f1f5ff; border-radius: 10px;">
-  <h3>📘 Excel 範例檔下載</h3>
-  <p>若你沒有 Excel 檔，可下載以下範例檔進行測試：</p>
-  <button class="btn-secondary" onclick="downloadParticipantsExample()">下載參加者名單（participants.xlsx）</button>
-  <button class="btn-secondary" onclick="downloadPrizesExample()">下載獎項名單（prizes.xlsx）</button>
-</div>
 
-    <!-- 抽獎控制區 -->
-    <div class="panel mt-16">
-      <h2>抽獎控制 <span>分獎項抽獎</span></h2>
-      <div class="flex" style="align-items:flex-end;">
-        <div style="flex:1 1 260px;">
-          <label>選擇獎項</label>
-          <select id="prizeSelect">
-            <option value="">請先建立獎項</option>
-          </select>
-          <div class="small mt-8">
-            每個獎項會依設定數量一次抽完，且不重複中獎。
-          </div>
-        </div>
-        <div class="toolbar" style="flex:1 1 260px; justify-content:flex-end;">
-          <button class="btn-primary" id="btnDraw">開始抽獎</button>
-          <button class="btn-secondary" id="btnReset">重置全部</button>
-          <button class="btn-ghost" id="btnDownloadWinners">下載中獎名單</button>
-        </div>
-      </div>
+    <script>
+        let currentMembers = []; 
+        let currentPrizes = [];
+        let history = [];
 
-      <!-- 中獎特效顯示 -->
-      <div class="winner-display mt-16" id="winnerDisplay">
-        <div class="winner-name" id="winnerName">尚未抽獎</div>
-        <div class="winner-prize" id="winnerPrize"></div>
-      </div>
+        // --- 特效函式：多重彩帶噴發 ---
+        function fireConfetti() {
+            const count = 200;
+            const defaults = { origin: { y: 0.7 } };
 
-      <!-- 中獎名單 -->
-      <div class="mt-16">
-        <div class="flex" style="justify-content:space-between; align-items:center;">
-          <h3 style="margin:0;">中獎名單</h3>
-          <span class="pill" id="winnerCount">目前 0 筆</span>
-        </div>
-        <div class="winners-table mt-8">
-          <table id="winnersTable">
-            <thead>
-              <tr>
-                <th>獎項</th>
-                <th>姓名</th>
-                <th>ID</th>
-                <th>群組</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+            function fire(particleRatio, opts) {
+                confetti({
+                    ...defaults,
+                    ...opts,
+                    particleCount: Math.floor(count * particleRatio)
+                });
+            }
 
-  <script>
-    // 資料結構
-    let participants = []; // {name, id, group}
-    let prizes = [];       // {id, name, quantity, drawn: boolean}
-    let winners = [];      // {prizeName, name, id, group}
-    let rollingTimer = null;
-
-    const participantsTableBody = document.querySelector('#participantsTable tbody');
-    const prizesTableBody = document.querySelector('#prizesTable tbody');
-    const winnersTableBody = document.querySelector('#winnersTable tbody');
-    const participantCountSpan = document.getElementById('participantCount');
-    const prizeCountSpan = document.getElementById('prizeCount');
-    const prizeSelect = document.getElementById('prizeSelect');
-    const winnerNameEl = document.getElementById('winnerName');
-    const winnerPrizeEl = document.getElementById('winnerPrize');
-    const winnerDisplayEl = document.getElementById('winnerDisplay');
-    const winnerCountSpan = document.getElementById('winnerCount');
-
-    // 工具：重新渲染 UI
-    function renderParticipants() {
-      participantsTableBody.innerHTML = '';
-      participants.forEach((p, idx) => {
-        const tr = document.createElement('tr');
-
-        const tdName = document.createElement('td');
-        const inputName = document.createElement('input');
-        inputName.className = 'inline-input';
-        inputName.value = p.name || '';
-        inputName.addEventListener('input', e => {
-          participants[idx].name = e.target.value;
-        });
-        tdName.appendChild(inputName);
-
-        const tdId = document.createElement('td');
-        const inputId = document.createElement('input');
-        inputId.className = 'inline-input';
-        inputId.value = p.id || '';
-        inputId.addEventListener('input', e => {
-          participants[idx].id = e.target.value;
-        });
-        tdId.appendChild(inputId);
-
-        const tdGroup = document.createElement('td');
-        const inputGroup = document.createElement('input');
-        inputGroup.className = 'inline-input';
-        inputGroup.value = p.group || '';
-        inputGroup.addEventListener('input', e => {
-          participants[idx].group = e.target.value;
-        });
-        tdGroup.appendChild(inputGroup);
-
-        const tdDel = document.createElement('td');
-        const btnDel = document.createElement('button');
-        btnDel.textContent = '刪除';
-        btnDel.className = 'btn-danger';
-        btnDel.addEventListener('click', () => {
-          participants.splice(idx, 1);
-          renderParticipants();
-        });
-        tdDel.appendChild(btnDel);
-
-        tr.appendChild(tdName);
-        tr.appendChild(tdId);
-        tr.appendChild(tdGroup);
-        tr.appendChild(tdDel);
-        participantsTableBody.appendChild(tr);
-      });
-      participantCountSpan.textContent = `共 ${participants.length} 人`;
-    }
-
-    function renderPrizes() {
-      prizesTableBody.innerHTML = '';
-      prizeSelect.innerHTML = '';
-      if (prizes.length === 0) {
-        const opt = document.createElement('option');
-        opt.value = '';
-        opt.textContent = '請先建立獎項';
-        prizeSelect.appendChild(opt);
-      }
-      prizes.forEach((p, idx) => {
-        const tr = document.createElement('tr');
-
-        const tdName = document.createElement('td');
-        const inputName = document.createElement('input');
-        inputName.className = 'inline-input';
-        inputName.value = p.name || '';
-        inputName.addEventListener('input', e => {
-          prizes[idx].name = e.target.value;
-          renderPrizes(); // 更新下拉
-        });
-        tdName.appendChild(inputName);
-
-        const tdQty = document.createElement('td');
-        const inputQty = document.createElement('input');
-        inputQty.type = 'number';
-        inputQty.min = '1';
-        inputQty.className = 'inline-input';
-        inputQty.value = p.quantity || 1;
-        inputQty.addEventListener('input', e => {
-          const v = parseInt(e.target.value, 10);
-          prizes[idx].quantity = isNaN(v) || v < 1 ? 1 : v;
-        });
-        tdQty.appendChild(inputQty);
-
-        const tdDel = document.createElement('td');
-        const btnDel = document.createElement('button');
-        btnDel.textContent = '刪除';
-        btnDel.className = 'btn-danger';
-        btnDel.addEventListener('click', () => {
-          prizes.splice(idx, 1);
-          renderPrizes();
-        });
-        tdDel.appendChild(btnDel);
-
-        tr.appendChild(tdName);
-        tr.appendChild(tdQty);
-        tr.appendChild(tdDel);
-        prizesTableBody.appendChild(tr);
-
-        // 下拉選單
-        const opt = document.createElement('option');
-        opt.value = p.id;
-        opt.textContent = `${p.name}（${p.quantity} 名）${p.drawn ? ' - 已抽完' : ''}`;
-        if (p.drawn) opt.disabled = true;
-        prizeSelect.appendChild(opt);
-      });
-      prizeCountSpan.textContent = `共 ${prizes.length} 個獎項`;
-    }
-
-    function renderWinners() {
-      winnersTableBody.innerHTML = '';
-      winners.forEach(w => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${escapeHtml(w.prizeName)}</td>
-          <td>${escapeHtml(w.name || '')}</td>
-          <td>${escapeHtml(w.id || '')}</td>
-          <td>${escapeHtml(w.group || '')}</td>
-        `;
-        winnersTableBody.appendChild(tr);
-      });
-      winnerCountSpan.textContent = `目前 ${winners.length} 筆`;
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    // 匯入 Excel：通用解析
-    function handleExcelFile(file, sheetName, callback) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[sheetName];
-        if (!sheet) {
-          alert(`找不到 Sheet：${sheetName}`);
-          return;
+            fire(0.25, { spread: 26, startVelocity: 55 });
+            fire(0.2, { spread: 60 });
+            fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+            fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+            fire(0.1, { spread: 120, startVelocity: 45 });
         }
-        const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-        callback(json);
-      };
-      reader.readAsArrayBuffer(file);
-    }
 
-    // 事件：匯入參加者
-    document.getElementById('participantsFile').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      handleExcelFile(file, 'participants', rows => {
-        participants = rows.map(r => ({
-          name: r.name ? String(r.name).trim() : '',
-          id: r.id ? String(r.id).trim() : '',
-          group: r.group ? String(r.group).trim() : ''
-        })).filter(p => p.name);
-        dedupParticipants();
-        renderParticipants();
-      });
-    });
+        // --- 名單與檔案處理 ---
+        function removeDuplicates() {
+            const textarea = document.getElementById('memberTextarea');
+            const cleanList = textarea.value.split('\n').map(n => n.trim()).filter(n => n !== '');
+            const uniqueList = [...new Set(cleanList)];
+            const diff = cleanList.length - uniqueList.length;
+            textarea.value = uniqueList.join('\n');
+            updateMemberCount();
+            if(diff > 0) {
+                const notice = document.getElementById('dupNotice');
+                notice.innerText = `✨ 已移除 ${diff} 筆重複名單`;
+                setTimeout(() => notice.innerText = '', 3000);
+            }
+        }
 
-    // 事件：匯入獎項
-    document.getElementById('prizesFile').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      handleExcelFile(file, 'prizes', rows => {
-        prizes = rows.map((r, idx) => ({
-          id: 'p_' + (Date.now() + idx),
-          name: r.name ? String(r.name).trim() : '',
-          quantity: r.quantity ? parseInt(r.quantity, 10) || 1 : 1,
-          drawn: false
-        })).filter(p => p.name);
-        renderPrizes();
-      });
-    });
+        function handleFile(e, callback) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const workbook = XLSX.read(evt.target.result, { type: 'binary' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                callback(XLSX.utils.sheet_to_json(sheet));
+                e.target.value = '';
+            };
+            reader.readAsBinaryString(file);
+        }
 
-    // 去除重複參加者（以 name 為 key）
-    function dedupParticipants() {
-      const seen = new Set();
-      participants = participants.filter(p => {
-        const key = (p.name || '').trim();
-        if (!key) return false;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-    }
-
-    document.getElementById('btnDedup').addEventListener('click', () => {
-      dedupParticipants();
-      renderParticipants();
-      alert('已依姓名去除重複參加者');
-    });
-
-    // 新增參加者
-    document.getElementById('btnAddParticipant').addEventListener('click', () => {
-      participants.push({ name: '新參加者', id: '', group: '' });
-      renderParticipants();
-    });
-
-    // 新增獎項
-    document.getElementById('btnAddPrize').addEventListener('click', () => {
-      prizes.push({
-        id: 'p_' + (Date.now() + Math.random()),
-        name: '新獎項',
-        quantity: 1,
-        drawn: false
-      });
-      renderPrizes();
-    });
-
-    // 抽獎
-    document.getElementById('btnDraw').addEventListener('click', () => {
-      if (rollingTimer) return; // 避免重複按
-      if (participants.length === 0) {
-        alert('尚未有參加者名單');
-        return;
-      }
-      const prizeId = prizeSelect.value;
-      if (!prizeId) {
-        alert('請先選擇獎項');
-        return;
-      }
-      const prize = prizes.find(p => p.id === prizeId);
-      if (!prize) {
-        alert('獎項不存在');
-        return;
-      }
-      if (prize.drawn) {
-        alert('此獎項已抽完');
-        return;
-      }
-
-      // 可抽名單：尚未中任何獎的人
-      const alreadyWinnerNames = new Set(winners.map(w => w.name));
-      const available = participants.filter(p => !alreadyWinnerNames.has(p.name));
-      if (available.length === 0) {
-        alert('所有人都已中獎，無可抽名單');
-        return;
-      }
-
-      const need = Math.min(prize.quantity, available.length);
-      if (need <= 0) {
-        alert('獎項數量設定錯誤');
-        return;
-      }
-
-      // 抽獎動畫：先滾動名字，再一次顯示全部中獎者
-      startRollingAnimation(available);
-
-      setTimeout(() => {
-        stopRollingAnimation();
-        const selected = drawRandom(available, need);
-        prize.drawn = true;
-
-        // 更新中獎名單
-        selected.forEach(p => {
-          winners.push({
-            prizeName: prize.name,
-            name: p.name,
-            id: p.id,
-            group: p.group
-          });
+        document.getElementById('memberFile').addEventListener('change', (e) => {
+            handleFile(e, (data) => {
+                const names = data.map(row => row['姓名'] || row['Name'] || Object.values(row)[0]);
+                document.getElementById('memberTextarea').value = names.join('\n');
+                updateMemberCount();
+            });
         });
-        renderPrizes();
-        renderWinners();
-        showFinalWinnersEffect(prize.name, selected);
-      }, 2000); // 2 秒滾動
-    });
 
-    function drawRandom(list, count) {
-      const arr = list.slice();
-      const result = [];
-      for (let i = 0; i < count && arr.length > 0; i++) {
-        const idx = Math.floor(Math.random() * arr.length);
-        result.push(arr[idx]);
-        arr.splice(idx, 1);
-      }
-      return result;
-    }
+        document.getElementById('prizeFile').addEventListener('change', (e) => {
+            handleFile(e, (data) => {
+                const list = document.getElementById('prizeList');
+                list.innerHTML = '';
+                data.forEach(row => {
+                    addPrizeRow(row['獎項名稱'] || Object.values(row)[0], row['數量'] || Object.values(row)[1]);
+                });
+                syncPrizes();
+            });
+        });
 
-    // 滾動動畫
-    function startRollingAnimation(available) {
-      let idx = 0;
-      winnerNameEl.classList.add('rolling');
-      winnerPrizeEl.textContent = '抽獎中...';
-      rollingTimer = setInterval(() => {
-        if (available.length === 0) return;
-        const p = available[idx % available.length];
-        winnerNameEl.textContent = p.name;
-        idx++;
-      }, 80);
-    }
+        function addPrizeRow(name = '', count = 1) {
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-12 gap-2';
+            div.innerHTML = `<input type="text" class="p-name col-span-8 p-2 rounded-lg border text-sm" value="${name}" placeholder="獎項名稱"><input type="number" class="p-count col-span-4 p-2 rounded-lg border text-sm text-center font-bold" value="${count}">`;
+            document.getElementById('prizeList').appendChild(div);
+        }
 
-    function stopRollingAnimation() {
-      if (rollingTimer) {
-        clearInterval(rollingTimer);
-        rollingTimer = null;
-      }
-      winnerNameEl.classList.remove('rolling');
-    }
+        function updateMemberCount() {
+            const text = document.getElementById('memberTextarea').value;
+            const count = text.split('\n').filter(n => n.trim() !== '').length;
+            document.getElementById('memberCount').innerText = `人數：${count}`;
+        }
 
-    // 最終中獎特效
-    function showFinalWinnersEffect(prizeName, selected) {
-      if (selected.length === 1) {
-        winnerNameEl.textContent = selected[0].name;
-      } else {
-        winnerNameEl.textContent = selected.map(p => p.name).join('、');
-      }
-      winnerPrizeEl.textContent = `恭喜獲得「${prizeName}」！`;
+        function syncPrizes() {
+            const names = document.querySelectorAll('.p-name');
+            const counts = document.querySelectorAll('.p-count');
+            currentPrizes = [];
+            names.forEach((el, i) => {
+                const c = parseInt(counts[i].value);
+                if (el.value.trim() !== '' && !isNaN(c)) currentPrizes.push({ name: el.value, count: c });
+            });
+            updatePrizeSelect();
+        }
 
-      // 簡單彩帶特效
-      for (let i = 0; i < 40; i++) {
-        const conf = document.createElement('div');
-        conf.className = 'confetti';
-        const colors = ['#f97316', '#facc15', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
-        conf.style.background = colors[Math.floor(Math.random() * colors.length)];
-        conf.style.left = Math.random() * 100 + '%';
-        conf.style.top = '-20px';
-        conf.style.animationDelay = (Math.random() * 0.6) + 's';
-        winnerDisplayEl.appendChild(conf);
-        setTimeout(() => conf.remove(), 1800);
-      }
-    }
+        function updatePrizeSelect() {
+            const select = document.getElementById('prizeSelect');
+            select.innerHTML = currentPrizes.map((p, i) => `<option value="${i}">${p.name} (剩 ${p.count})</option>`).join('');
+        }
 
-    // 重置
-    document.getElementById('btnReset').addEventListener('click', () => {
-      if (!confirm('確定要重置所有資料？')) return;
-      participants = [];
-      prizes = [];
-      winners = [];
-      winnerNameEl.textContent = '尚未抽獎';
-      winnerPrizeEl.textContent = '';
-      renderParticipants();
-      renderPrizes();
-      renderWinners();
-    });
+        function resetSystem() {
+            if (!confirm("確定重置？這將同步名單並清空紀錄。")) return;
+            currentMembers = document.getElementById('memberTextarea').value.split('\n').filter(n => n.trim() !== '').map(n => n.trim());
+            syncPrizes();
+            history = [];
+            document.getElementById('history').innerHTML = '';
+            document.getElementById('result').innerText = 'READY';
+        }
 
-document.getElementById('btnDownloadWinners').addEventListener('click', () => {
-  if (winners.length === 0) {
-    alert('目前尚無中獎名單');
-    return;
-  }
+        function draw() {
+            if (history.length === 0 && currentMembers.length === 0) {
+                currentMembers = document.getElementById('memberTextarea').value.split('\n').filter(n => n.trim() !== '').map(n => n.trim());
+                syncPrizes();
+            }
+            if (currentMembers.length === 0) return alert("名單已空！");
+            const prizeIdx = document.getElementById('prizeSelect').value;
+            const prize = currentPrizes[prizeIdx];
+            if (!prize || prize.count <= 0) return alert("獎項已抽完！");
 
-  // 轉成 SheetJS 可用格式
-  const data = winners.map(w => ({
-    prizeName: w.prizeName,
-    name: w.name,
-    id: w.id,
-    group: w.group
-  }));
+            const winIdx = Math.floor(Math.random() * currentMembers.length);
+            const winner = currentMembers.splice(winIdx, 1)[0];
+            prize.count--;
 
-  // 建立工作表
-  const ws = XLSX.utils.json_to_sheet(data);
+            // 更新結果與動畫
+            const resDiv = document.getElementById('result');
+            resDiv.innerText = winner;
+            resDiv.classList.remove('winner-anim');
+            void resDiv.offsetWidth; 
+            resDiv.classList.add('winner-anim');
 
-  // 建立工作簿
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "winners");
+            // 觸發彩帶特效
+            fireConfetti();
 
-  // 下載 Excel
-  XLSX.writeFile(wb, "winners.xlsx");
-});
+            // 紀錄
+            const hList = document.getElementById('history');
+            const log = `[${prize.name}] ${winner}`;
+            history.push(log);
+            const li = document.createElement('li');
+            li.className = "bg-slate-50 border p-3 rounded-xl flex justify-between items-center text-sm shadow-sm";
+            li.innerHTML = `<strong>${log}</strong><span class="text-xs text-slate-400">#${history.length}</span>`;
+            hList.prepend(li);
 
-// 下載參加者名單 Excel
-function downloadParticipantsExample() {
-  const data = [
-    { name: "王小明", id: "A001", group: "行銷部" },
-    { name: "李小華", id: "A002", group: "工程部" },
-    { name: "張大同", id: "A003", group: "設計部" },
-    { name: "陳美麗", id: "A004", group: "行銷部" },
-    { name: "林志強", id: "A005", group: "工程部" }
-  ];
+            updatePrizeSelect();
+            updateMemberCount();
+        }
 
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "participants");
+        function exportHistory() {
+            if (history.length === 0) return alert("尚無紀錄");
+            const blob = new Blob([history.join('\n')], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `中獎名單.txt`;
+            a.click();
+        }
 
-  XLSX.writeFile(wb, "participants.xlsx");
-}
-
-// 下載獎項名單 Excel
-function downloadPrizesExample() {
-  const data = [
-    { name: "一獎：iPad", quantity: 1 },
-    { name: "二獎：AirPods", quantity: 2 },
-    { name: "三獎：超商禮券 500", quantity: 3 },
-    { name: "四獎：咖啡券", quantity: 5 }
-  ];
-
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "prizes");
-
-  XLSX.writeFile(wb, "prizes.xlsx");
-}
-
-    // 初始化
-    renderParticipants();
-    renderPrizes();
-    renderWinners();
-  </script>
+        document.getElementById('memberTextarea').addEventListener('input', updateMemberCount);
+        updateMemberCount();
+    </script>
 </body>
 </html>
