@@ -227,7 +227,7 @@ function chselcleord($num)
 	return "整潔秩序找不到";	
 	}
 
-function chclass($num)
+function chclass($num)//數字轉兩碼
 	{
 	$numt=0+$num;
 	if ($numt<10	)
@@ -236,7 +236,7 @@ function chclass($num)
 		{return "".$numt;}	
 	}	
 		
-function newhonorclass($prikey,$class)
+function newhonorclass($prikey,$class)//寫入榮譽班
 	{
 	global $mysqli;	
 	if ($_REQUEST["selweek"]>=4)
@@ -260,7 +260,7 @@ function newhonorclass($prikey,$class)
 	return -1;	
 	}
 
-function istopspecial($week,$class)
+function istopspecial($week,$class)//是否為非榮譽班最高分
 	{
 	global $mysqli;
 	$i=intval($class/100);
@@ -292,7 +292,7 @@ function findspecial($spescore,$stagedn,$stageup)
 		if (!$recordtxt =$mysqli->query($sql_txt))
 			error_echo ($_SERVER['PHP_SELF'].__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);	
 		list($tscore)=$recordtxt->fetch_array(MYSQLI_NUM);	
-		if 	($tscore<=($spescore-2))
+		if 	($tscore<=$spescore)
 			{
 			//echo "bb".$prikey."aa".$spescore."vv<br>";
 			$sql_select1 = "UPDATE cleord SET memo='' WHERE week='".$_REQUEST["selweek"]."' AND kind='".$_REQUEST["selcleord"]."' AND class='".$class."'";
