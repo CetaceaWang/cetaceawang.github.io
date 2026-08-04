@@ -1,5 +1,5 @@
 {
-  "version": 1.07,
+  "version": 1.08,
     "update": {
         "update.php": 1.04,
         "cleord/allstat.php": 1.01,
@@ -10,7 +10,7 @@
         "cleord/outtxt.php": 1.06,
         "cleord/outxls.php": 1.02,
         "cleord/setone.php": 1.06,
-        "cleord/statistics.php": 1.07,
+        "cleord/statistics.php": 1.08,
         "dds/dds5.php": 1.03,
         "dds/dds6.php": 1.05,
         "dds/dds_bac.php": 1.04,

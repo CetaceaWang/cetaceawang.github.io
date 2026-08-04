@@ -157,13 +157,13 @@ function datacor()
 				{$spescore=$tscore;
 				findspecial($spescore,$stagedn,$stageup);
 				}
-			if ($scoreser==12)
+			if ($scoreser==9)//1.08 取3+6名
 				{$nspescore=$tscore;}	
 			if (($scoreser<=3)||($spescore==$tscore))
 				{
 				uprank($prikey,"特優");
 				}
-			else if (($scoreser<=12)||($nspescore==$tscore))
+			else if (($scoreser<=9)||($nspescore==$tscore))
 				{
 				uprank($prikey,"優等");	
 				}			
@@ -189,14 +189,14 @@ function datacor()
 				{$spescore=$tscore;
 				findspecial($spescore,$stagedn,$stageup);
 				}
-			if ($scoreser==12)
+			if ($scoreser==9)
 				{$nspescore=$tscore;}
 			//echo "優等最低分".$nspescore."分數".$tscore."序位".$scoreser."班級".$class."<br>";		
 			if (($scoreser<=3)||($spescore==$tscore))
 				{
 				uprank($prikey,"特優");
 				}
-			else if (($scoreser<=12)||($nspescore==$tscore))
+			else if (($scoreser<=9)||($nspescore==$tscore))
 				{
 				uprank($prikey,"優等");	
 				}			
@@ -292,7 +292,7 @@ function findspecial($spescore,$stagedn,$stageup)
 		if (!$recordtxt =$mysqli->query($sql_txt))
 			error_echo ($_SERVER['PHP_SELF'].__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);	
 		list($tscore)=$recordtxt->fetch_array(MYSQLI_NUM);	
-		if 	($tscore<=$spescore)
+		if 	($tscore<=$spescore)//1.07 榮譽班如果低於特優最低分就取消
 			{
 			//echo "bb".$prikey."aa".$spescore."vv<br>";
 			$sql_select1 = "UPDATE cleord SET memo='' WHERE week='".$_REQUEST["selweek"]."' AND kind='".$_REQUEST["selcleord"]."' AND class='".$class."'";
