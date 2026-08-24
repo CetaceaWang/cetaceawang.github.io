@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>抽獎系統</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 20px; }
+    h1 { margin-bottom: 10px; }
+    .section { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; border-radius: 6px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+    th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+    th { background: #f5f5f5; }
+    button { margin: 4px 4px 4px 0; padding: 6px 12px; cursor: pointer; }
+    input[type="number"] { width: 80px; }
+    .winner-area { margin-top: 10px; white-space: pre-wrap; background: #fafafa; padding: 8px; border-radius: 4px; border: 1px solid #eee; }
+    .flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .small { font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>抽獎系統</h1>
+
+  <div class="section">
+    <h2>匯入檔案</h2>
+    <p class="small">參加者 Excel：第一欄為「姓名」；獎項 Excel：第一欄「獎項名稱」、第二欄「名額」。</p>
+    <div class="flex-row">
+      <div>
+        <label>匯入參加者 Excel：</label>
+        <input type="file" id="participantsFile" accept=".xlsx,.xls" />
+        <button onclick="importParticipants()">匯入參加者</button>
+      </div>
+      <div>
+        <label>匯入獎項 Excel：</label>
+        <input type="file" id="prizesFile" accept=".xlsx,.xls" />
+        <button onclick="importPrizes()">匯入獎項</button>
+      </div>
+    </div>
+    <button onclick="dedupeParticipants()">移除重複參加者</button>
+  </div>
+
+  <div class="section">
+    <h2>參加者名單（可編輯）</h2>
+    <button onclick="addParticipantRow()">新增參加者</button>
+    <table id="participantsTable">
+      <thead>
+        <tr>
+          <th>姓名</th>
+          <th>刪除</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>獎項設定（可編輯）</h2>
+    <button onclick="addPrizeRow()">新增獎項</button>
+    <table id="prizesTable">
+      <thead>
+        <tr>
+          <th>獎項名稱</th>
+          <th>名額</th>
+          <th>刪除</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>抽獎操作</h2>
+    <div>
+      <label>選擇單一獎項：</label>
+      <select id="singlePrizeSelect"></select>
+      <button onclick="drawSinglePrize()">抽選該獎項</button>
+    </div>
+    <div style="margin-top:8px;">
+      <button onclick="drawAllPrizes()">全部獎項一次抽完</button>
+      <button onclick="resetAll()">重置抽獎</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>中獎結果</h2>
+    <button onclick="downloadWinners()">下載中獎名單 (CSV)</button>
+    <div id="winnersDisplay" class="winner-area"></div>
+  </div>
+
+  <script>
+    let participants = []; // { name }
+    let prizes = [];       // { name, count }
+    let winners = [];      // { prizeName, winnerName }
+
+    function readExcelFile(file, callback) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        callback(json);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function importParticipants() {
+      const fileInput = document.getElementById('participantsFile');
+      if (!fileInput.files[0]) { alert('請選擇參加者 Excel 檔'); return; }
+      readExcelFile(fileInput.files[0], (rows) => {
+        // 第一欄為姓名
+        rows.forEach((row, idx) => {
+          if (idx === 0 && typeof row[0] === 'string' && row[0].includes('姓名')) return; // 略過標題列
+          const name = (row[0] || '').toString().trim();
+          if (name) participants.push({ name });
+        });
+        refreshParticipantsTable();
+      });
+    }
+
+    function importPrizes() {
+      const fileInput = document.getElementById('prizesFile');
+      if (!fileInput.files[0]) { alert('請選擇獎項 Excel 檔'); return; }
+      readExcelFile(fileInput.files[0], (rows) => {
+        // 第一欄獎項名稱，第二欄名額
+        rows.forEach((row, idx) => {
+          if (idx === 0 && typeof row[0] === 'string' && row[0].includes('獎項')) return; // 略過標題列
+          const name = (row[0] || '').toString().trim();
+          const count = parseInt(row[1], 10) || 1;
+          if (name) prizes.push({ name, count });
+        });
+        refreshPrizesTable();
+      });
+    }
+
+    function refreshParticipantsTable() {
+      const tbody = document.querySelector('#participantsTable tbody');
+      tbody.innerHTML = '';
+      participants.forEach((p, index) => {
+        const tr = document.createElement('tr');
+
+        const tdName = document.createElement('td');
+        const inputName = document.createElement('input');
+        inputName.type = 'text';
+        inputName.value = p.name;
+        inputName.oninput = () => { participants[index].name = inputName.value.trim(); };
+        tdName.appendChild(inputName);
+
+        const tdDelete = document.createElement('td');
+        const btnDel = document.createElement('button');
+        btnDel.textContent = '刪除';
+        btnDel.onclick = () => { participants.splice(index, 1); refreshParticipantsTable(); };
+        tdDelete.appendChild(btnDel);
+
+        tr.appendChild(tdName);
+        tr.appendChild(tdDelete);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function refreshPrizesTable() {
+      const tbody = document.querySelector('#prizesTable tbody');
+      tbody.innerHTML = '';
+      prizes.forEach((p, index) => {
+        const tr = document.createElement('tr');
+
+        const tdName = document.createElement('td');
+        const inputName = document.createElement('input');
+        inputName.type = 'text';
+        inputName.value = p.name;
+        inputName.oninput = () => { prizes[index].name = inputName.value.trim(); refreshPrizeSelect(); };
+        tdName.appendChild(inputName);
+
+        const tdCount = document.createElement('td');
+        const inputCount = document.createElement('input');
+        inputCount.type = 'number';
+        inputCount.min = '1';
+        inputCount.value = p.count;
+        inputCount.oninput = () => {
+          const v = parseInt(inputCount.value, 10);
+          prizes[index].count = isNaN(v) || v < 1 ? 1 : v;
+        };
+        tdCount.appendChild(inputCount);
+
+        const tdDelete = document.createElement('td');
+        const btnDel = document.createElement('button');
+        btnDel.textContent = '刪除';
+        btnDel.onclick = () => { prizes.splice(index, 1); refreshPrizesTable(); refreshPrizeSelect(); };
+        tdDelete.appendChild(btnDel);
+
+        tr.appendChild(tdName);
+        tr.appendChild(tdCount);
+        tr.appendChild(tdDelete);
+        tbody.appendChild(tr);
+      });
+      refreshPrizeSelect();
+    }
+
+    function addParticipantRow() {
+      participants.push({ name: '' });
+      refreshParticipantsTable();
+    }
+
+    function addPrizeRow() {
+      prizes.push({ name: '', count: 1 });
+      refreshPrizesTable();
+    }
+
+    function dedupeParticipants() {
+      const seen = new Set();
+      participants = participants.filter(p => {
+        const key = p.name.trim();
+        if (!key) return false;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      refreshParticipantsTable();
+      alert('已移除重複參加者');
+    }
+
+    function refreshPrizeSelect() {
+      const select = document.getElementById('singlePrizeSelect');
+      select.innerHTML = '';
+      prizes.forEach((p, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `${p.name} (名額：${p.count})`;
+        select.appendChild(opt);
+      });
+    }
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function drawSinglePrize() {
+      if (participants.length === 0) { alert('尚未有參加者'); return; }
+      if (prizes.length === 0) { alert('尚未設定獎項'); return; }
+
+      const select = document.getElementById('singlePrizeSelect');
+      if (select.options.length === 0) { alert('沒有可抽的獎項'); return; }
+
+      const prizeIndex = parseInt(select.value, 10);
+      const prize = prizes[prizeIndex];
+      if (!prize || !prize.name) { alert('請確認獎項名稱'); return; }
+
+      const available = participants.map(p => p.name);
+      if (available.length < prize.count) {
+        alert(`參加者不足以抽出 ${prize.count} 名`);
+        return;
+      }
+
+      const shuffled = shuffleArray([...available]);
+      const selected = shuffled.slice(0, prize.count);
+
+      selected.forEach(name => {
+        winners.push({ prizeName: prize.name, winnerName: name });
+      });
+
+      showConfetti();
+      renderWinners();
+    }
+
+    function drawAllPrizes() {
+      if (participants.length === 0) { alert('尚未有參加者'); return; }
+      if (prizes.length === 0) { alert('尚未設定獎項'); return; }
+
+      const totalNeeded = prizes.reduce((sum, p) => sum + (p.count || 0), 0);
+      if (participants.length < totalNeeded) {
+        alert(`參加者不足以抽出全部獎項，共需 ${totalNeeded} 名`);
+        return;
+      }
+
+      const available = shuffleArray(participants.map(p => p.name));
+      let idx = 0;
+      prizes.forEach(p => {
+        for (let i = 0; i < p.count; i++) {
+          winners.push({ prizeName: p.name, winnerName: available[idx++] });
+        }
+      });
+
+      showConfetti();
+      renderWinners();
+    }
+
+    function renderWinners() {
+      const div = document.getElementById('winnersDisplay');
+      if (winners.length === 0) {
+        div.textContent = '尚未有中獎名單。';
+        return;
+      }
+      let text = '';
+      const grouped = {};
+      winners.forEach(w => {
+        if (!grouped[w.prizeName]) grouped[w.prizeName] = [];
+        grouped[w.prizeName].push(w.winnerName);
+      });
+      Object.keys(grouped).forEach(prizeName => {
+        text += `【${prizeName}】\n`;
+        grouped[prizeName].forEach((name, i) => {
+          text += `  第${i + 1}位：${name}\n`;
+        });
+        text += '\n';
+      });
+      div.textContent = text;
+    }
+
+    function resetAll() {
+      if (!confirm('確定要重置所有資料與中獎名單？')) return;
+      participants = [];
+      prizes = [];
+      winners = [];
+      refreshParticipantsTable();
+      refreshPrizesTable();
+      renderWinners();
+      document.getElementById('participantsFile').value = '';
+      document.getElementById('prizesFile').value = '';
+    }
+
+    function downloadWinners() {
+      if (winners.length === 0) { alert('尚未有中獎名單'); return; }
+      let csv = '獎項,中獎者\n';
+      winners.forEach(w => {
+        csv += `"${w.prizeName}","${w.winnerName}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'winners.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function showConfetti() {
+      confetti({
+        particleCount: 200,
+        spread: 80,
+        origin: { y: 0.3 }
+      });
+    }
+
+    // 初始化顯示
+    renderWinners();
+  </script>
+</body>
+</html>
