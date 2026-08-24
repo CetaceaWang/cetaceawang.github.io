@@ -1,259 +1,219 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業抽獎系統 v3.0 - 慶典特效版</title>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
-        body { font-family: 'Noto+Sans+TC', sans-serif; }
-        .winner-anim { animation: celebrate 0.6s ease-in-out; }
-        @keyframes celebrate { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); } }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>幸運大抽獎</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--primary:#6c5ce7;--secondary:#a29bfe;--bg:#f5f7fb;--card:#fff;--text:#202633;--muted:#6b7280;--danger:#e74c3c;--success:#00b894}
+*{box-sizing:border-box}body{margin:0;font-family:"Microsoft JhengHei","Noto Sans TC",Arial,sans-serif;background:linear-gradient(135deg,#f5f7fb,#ece9ff);color:var(--text)}
+header{padding:28px 20px;text-align:center;background:linear-gradient(135deg,#5f4bd8,#8e7dff);color:#fff;box-shadow:0 4px 18px #0002}
+header h1{margin:0 0 8px;font-size:34px}header p{margin:0;opacity:.9}
+.container{max-width:1250px;margin:24px auto;padding:0 16px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.card{background:var(--card);border-radius:18px;padding:20px;box-shadow:0 8px 30px #30306014;margin-bottom:18px}
+.card h2{margin:0 0 15px;font-size:20px}.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+button,.file-label{border:0;border-radius:10px;padding:10px 15px;font-weight:700;cursor:pointer;background:var(--primary);color:#fff;transition:.15s;display:inline-flex;align-items:center;justify-content:center}
+button:hover,.file-label:hover{transform:translateY(-1px);filter:brightness(1.05)}button.secondary{background:#eef0f6;color:#303746}button.danger{background:var(--danger)}button.success{background:var(--success)}button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+input[type=file]{display:none}input,select{width:100%;padding:10px 12px;border:1px solid #dfe3ec;border-radius:9px;font:inherit}label{font-weight:700;font-size:14px;display:block;margin-bottom:6px}
+.table-wrap{max-height:330px;overflow:auto;border:1px solid #edf0f5;border-radius:10px}table{width:100%;border-collapse:collapse}th,td{padding:9px 10px;border-bottom:1px solid #edf0f5;text-align:left;font-size:14px}th{background:#f8f9fc;position:sticky;top:0;z-index:1}td input{padding:6px 8px}.empty{text-align:center;color:var(--muted);padding:30px}
+.lottery{grid-column:1/-1;text-align:center;padding:28px}.prize-select{max-width:500px;margin:0 auto 16px}.draw-buttons{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}.draw{font-size:20px;padding:15px 30px;border-radius:14px}.reset{background:#fff;color:var(--danger);border:2px solid var(--danger)}
+.winner-area{min-height:140px;margin-top:20px;padding:20px;border-radius:15px;background:linear-gradient(135deg,#fff9e6,#fff);border:2px dashed #ffd166}
+.winner-title{font-size:18px;color:#8a6200}.winner-name{font-size:34px;font-weight:900;color:#5f4bd8;margin:10px 0}.winner-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:15px}.winner-chip{padding:12px;background:#fff;border-radius:10px;box-shadow:0 3px 12px #0001;font-weight:700}
+.status{font-size:13px;color:var(--muted);margin-top:8px}.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}.stat{background:#f7f7fb;border-radius:10px;padding:10px 14px}.stat b{font-size:20px;display:block;color:var(--primary)}
+canvas#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.lottery{grid-column:auto}header h1{font-size:28px}}
+</style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4 md:p-8">
-    <div class="max-w-6xl mx-auto">
-        
-        <div class="flex flex-col lg:flex-row justify-between items-start mb-8 gap-6">
-            <div>
-                <h1 class="text-4xl font-black text-indigo-800 tracking-tight">🏆 專業抽獎系統 <span class="text-sm font-normal bg-indigo-100 text-indigo-600 px-2 py-1 rounded">v3.0 FX</span></h1>
-                <p class="text-slate-500 mt-2">內建彩帶特效、名單去重與 Excel 支援</p>
-            </div>
-            
-            <details class="bg-amber-50 border border-amber-200 rounded-xl p-4 w-full lg:max-w-md shadow-sm">
-                <summary class="cursor-pointer text-amber-800 font-bold text-sm select-none">💡 操作技巧 (點擊展開)</summary>
-                <ul class="text-xs text-amber-900 mt-3 space-y-2 list-disc list-inside">
-                    <li><b>編輯後請重置：</b>修改名單或獎項後，務必點擊「🔄 重置系統」。</li>
-                    <li><b>重複名單：</b>點擊「移除重複」可自動清理多餘的相同姓名。</li>
-                    <li><b>中獎特效：</b>開獎瞬間會自動噴發彩帶！</li>
-                </ul>
-            </details>
-        </div>
+<body>
+<canvas id="confetti"></canvas>
+<header><h1>🎉 幸運大抽獎</h1><p>Excel 名單匯入・獎項管理・一次抽完・中獎名單下載</p></header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold text-slate-800">👥 參加者名單</h2>
-                    <div class="flex gap-2">
-                        <button onclick="document.getElementById('memberFile').click()" class="text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-2 rounded-lg font-bold">匯入 Excel</button>
-                        <button onclick="removeDuplicates()" class="text-xs bg-rose-50 text-rose-600 hover:bg-rose-100 px-3 py-2 rounded-lg font-bold">移除重複</button>
-                        <input type="file" id="memberFile" accept=".xlsx, .xls, .csv" class="hidden">
-                    </div>
-                </div>
-                <textarea id="memberTextarea" placeholder="請輸入姓名（每行一個）" 
-                    class="w-full h-56 p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm leading-relaxed bg-slate-50 shadow-inner"></textarea>
-                <div class="flex justify-between mt-3">
-                    <span id="dupNotice" class="text-xs text-rose-500 font-bold"></span>
-                    <div id="memberCount" class="text-sm text-slate-600 font-black">人數：0</div>
-                </div>
-            </div>
+<div class="container">
+  <div class="grid">
+    <section class="card">
+      <h2>👥 參加者名單</h2>
+      <div class="toolbar">
+        <label class="file-label">📥 匯入 Excel / CSV<input id="participantFile" type="file" accept=".xlsx,.xls,.csv"></label>
+        <button class="secondary" onclick="addParticipant()">＋新增</button>
+        <button class="secondary" onclick="removeDuplicates()">🧹 移除重複</button>
+        <button class="danger" onclick="clearParticipants()">清空</button>
+      </div>
+      <div class="stats"><div class="stat"><b id="participantCount">0</b>參加者</div><div class="stat"><b id="availableCount">0</b>可抽獎</div></div>
+      <div class="table-wrap"><table><thead><tr><th>#</th><th>姓名／參加者</th><th>操作</th></tr></thead><tbody id="participantBody"></tbody></table></div>
+      <div class="status">Excel 第一欄會自動作為參加者名稱；第一列可為標題。</div>
+    </section>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold text-slate-800">🎁 獎項設定</h2>
-                    <button onclick="document.getElementById('prizeFile').click()" class="text-xs bg-emerald-50 text-emerald-600 hover:bg-emerald-100 px-3 py-2 rounded-lg font-bold">匯入獎項</button>
-                    <input type="file" id="prizeFile" accept=".xlsx, .xls, .csv" class="hidden">
-                </div>
-                <div id="prizeList" class="space-y-3 overflow-y-auto pr-2 no-scrollbar" style="max-height: 250px;">
-                    <div class="grid grid-cols-12 gap-2">
-                        <input type="text" class="p-name col-span-8 p-2 rounded-lg border border-slate-200 text-sm" placeholder="獎項名稱">
-                        <input type="number" class="p-count col-span-4 p-2 rounded-lg border border-slate-200 text-sm text-center font-bold" value="1">
-                    </div>
-                </div>
-                <button onclick="addPrizeRow()" class="w-full mt-4 py-2 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl text-slate-500 text-sm font-medium hover:bg-slate-100">+ 新增獎項欄位</button>
-            </div>
-        </div>
+    <section class="card">
+      <h2>🏆 獎項管理</h2>
+      <div class="toolbar">
+        <label class="file-label">📥 匯入獎項 Excel<input id="prizeFile" type="file" accept=".xlsx,.xls,.csv"></label>
+        <button class="secondary" onclick="addPrize()">＋新增獎項</button>
+        <button class="danger" onclick="clearPrizes()">清空</button>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>#</th><th>獎項名稱</th><th>名額</th><th>操作</th></tr></thead><tbody id="prizeBody"></tbody></table></div>
+      <div class="status">Excel：第一欄為獎項名稱，第二欄為名額；沒有名額時預設 1 名。</div>
+    </section>
 
-        <div class="bg-indigo-950 rounded-3xl p-10 text-center shadow-2xl mb-8 relative">
-            <div class="mb-6">
-                <select id="prizeSelect" class="bg-indigo-800 text-white text-xl font-black px-6 py-3 rounded-2xl border border-indigo-700 outline-none cursor-pointer"></select>
-            </div>
-            
-            <div id="result" class="h-40 flex items-center justify-center text-6xl md:text-8xl font-black text-yellow-400 mb-8 tracking-tighter drop-shadow-lg">
-                READY
-            </div>
+    <section class="card lottery">
+      <h2>🎰 抽獎區</h2>
+      <div class="prize-select">
+        <label>選擇抽獎方式</label>
+        <select id="prizeSelect" onchange="updateDrawInfo()"></select><div id="drawInfo" class="status" style="margin-top:8px">請先建立獎項</div>
+      </div>
+      <div class="draw-buttons">
+        <button class="draw" onclick="drawSelected()">🎯 抽選此獎項</button>
+        <button class="draw success" onclick="drawAll()">🏆 全部獎項一次抽完</button>
+        <button class="draw reset" onclick="resetLottery()">↻ 重置抽獎</button>
+      </div>
+      <div class="winner-area">
+        <div class="winner-title" id="winnerTitle">尚未開始抽獎</div>
+        <div class="winner-name" id="winnerName">祝你好運！</div>
+        <div class="winner-list" id="winnerList"></div>
+      </div>
+    </section>
 
-            <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <button onclick="draw()" class="bg-yellow-400 hover:bg-yellow-300 text-indigo-950 px-16 py-5 rounded-2xl text-3xl font-black shadow-[0_8px_0_rgb(202,138,4)] active:translate-y-1 active:shadow-none transition-all">
-                    🎰 開始抽獎
-                </button>
-                <button onclick="resetSystem()" class="bg-indigo-700 hover:bg-indigo-600 text-white px-8 py-5 rounded-2xl text-lg font-bold">
-                    🔄 重置系統
-                </button>
-            </div>
-        </div>
+    <section class="card" style="grid-column:1/-1">
+      <h2>📋 中獎名單</h2>
+      <div class="toolbar">
+        <button onclick="downloadWinners('xlsx')">⬇️ 下載 Excel</button>
+        <button class="secondary" onclick="downloadWinners('csv')">⬇️ 下載 CSV</button>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>獎項</th><th>中獎者</th></tr></thead><tbody id="winnerTableBody"></tbody></table></div>
+    </section>
+  </div>
+</div>
 
-        <div class="bg-white rounded-2xl border border-slate-200 p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-slate-800">📜 中獎紀錄</h3>
-                <button onclick="exportHistory()" class="text-sm font-bold text-indigo-600 hover:underline">匯出 (.txt)</button>
-            </div>
-            <ul id="history" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 h-64 overflow-y-auto no-scrollbar"></ul>
-        </div>
-    </div>
+<script>
+let participants=[];
+let prizes=[];
+let winners=[];
+let drawing=false;
 
-    <script>
-        let currentMembers = []; 
-        let currentPrizes = [];
-        let history = [];
+const $=id=>document.getElementById(id);
 
-        // --- 特效函式：多重彩帶噴發 ---
-        function fireConfetti() {
-            const count = 200;
-            const defaults = { origin: { y: 0.7 } };
+function renderParticipants(){
+  $("participantBody").innerHTML=participants.length?participants.map((p,i)=>`<tr><td>${i+1}</td><td><input value="${esc(p)}" onchange="participants[${i}]=this.value.trim();save()"></td><td><button class="danger" onclick="participants.splice(${i},1);renderParticipants();save()">刪除</button></td></tr>`).join(""):`<tr><td colspan="3" class="empty">尚無參加者</td></tr>`;
+  $("participantCount").textContent=participants.length;
+  updateAvailable();
+}
+function renderPrizes(){
+  const old=$('prizeSelect').value;
+  $('prizeBody').innerHTML=prizes.length?prizes.map((p,i)=>{
+    const won=winners.filter(w=>w.prize===p.name).length;
+    return `<tr><td>${i+1}</td><td><input value="${esc(p.name)}" onchange="updatePrizeName(${i},this.value)"></td><td><input type="number" min="1" value="${p.count}" onchange="updatePrizeCount(${i},this.value)"></td><td><span class="status">已中 ${won} / ${p.count}</span> <button class="danger" onclick="prizes.splice(${i},1);renderPrizes();save()">刪除</button></td></tr>`
+  }).join(''):`<tr><td colspan="4" class="empty">尚無獎項</td></tr>`;
+  $('prizeSelect').innerHTML=prizes.map((p,i)=>{const won=winners.filter(w=>w.prize===p.name).length;return `<option value="${i}">${esc(p.name)}｜總名額 ${p.count} 名｜剩餘 ${Math.max(0,p.count-won)} 名</option>`}).join('');
+  if(prizes[old]) $('prizeSelect').value=old;
+  updateDrawInfo();
+}
+function updatePrizeName(i,v){const old=prizes[i].name,n=v.trim()||'未命名獎項';if(old!==n)winners.forEach(w=>{if(w.prize===old)w.prize=n});prizes[i].name=n;renderPrizes();renderWinners();save()}
+function updatePrizeCount(i,v){const won=winners.filter(w=>w.prize===prizes[i].name).length,n=Math.max(1,parseInt(v)||1);if(n<won){alert(`此獎項目前已中獎 ${won} 名，名額不能低於已中獎人數。`);renderPrizes();return}prizes[i].count=n;renderPrizes();save()}
+function updateDrawInfo(){const i=parseInt($('prizeSelect').value),el=$('drawInfo');if(!el)return;if(!prizes[i]){el.textContent='請先建立獎項';return}const p=prizes[i],won=winners.filter(w=>w.prize===p.name).length;el.textContent=`${p.name}｜設定 ${p.count} 名｜已中 ${won} 名｜本次將抽 ${Math.max(0,p.count-won)} 名`}
 
-            function fire(particleRatio, opts) {
-                confetti({
-                    ...defaults,
-                    ...opts,
-                    particleCount: Math.floor(count * particleRatio)
-                });
-            }
+function renderWinners(){
+  $("winnerTableBody").innerHTML=winners.length?winners.map(w=>`<tr><td>${esc(w.prize)}</td><td>${esc(w.name)}</td></tr>`).join(""):`<tr><td colspan="2" class="empty">尚無中獎紀錄</td></tr>`;
+}
+function addParticipant(){participants.push("新參加者");renderParticipants();save()}
+function addPrize(){prizes.push({name:"新獎項",count:1});renderPrizes();save()}
+function clearParticipants(){if(confirm("確定清空全部參加者？")){participants=[];renderParticipants();save()}}
+function clearPrizes(){if(confirm("確定清空全部獎項？")){prizes=[];renderPrizes();save()}}
+function removeDuplicates(){
+  const before=participants.length;
+  const seen=new Set();
+  participants=participants.filter(x=>{const k=x.trim().toLowerCase();if(!k||seen.has(k))return false;seen.add(k);return true});
+  renderParticipants();save();
+  alert(`已移除 ${before-participants.length} 筆重複或空白名單。`);
+}
+function updateAvailable(){
+  const won=new Set(winners.map(w=>w.name));
+  $("availableCount").textContent=participants.filter(x=>x && !won.has(x)).length;
+}
+function resetLottery(){
+  if(confirm("重置後將清除全部中獎紀錄，參加者可重新抽獎。確定嗎？")){
+    winners=[];renderWinners();renderPrizes();updateAvailable();$("winnerTitle").textContent="尚未開始抽獎";$("winnerName").textContent="祝你好運！";$("winnerList").innerHTML="";save();
+  }
+}
+function availableNames(){
+  const won=new Set(winners.map(w=>w.name));
+  return participants.filter(x=>x && !won.has(x));
+}
+async function drawSelected(){
+  if(drawing)return;
+  const i=parseInt($("prizeSelect").value);
+  if(!prizes[i])return alert("請先建立獎項。");
+  await drawPrize(i);
+}
+async function drawAll(){
+  if(drawing)return;
+  if(!prizes.length)return alert("請先建立獎項。");
+  if(!availableNames().length)return alert("沒有可抽獎的參加者。");
+  for(let i=0;i<prizes.length;i++){
+    if(availableNames().length===0)break;
+    await drawPrize(i);
+    await sleep(500);
+  }
+}
+async function drawPrize(i){
+ const prize=prizes[i]; if(!prize)return;
+ const won=winners.filter(w=>w.prize===prize.name).length, need=Math.max(0,prize.count-won);
+ if(!need){$('winnerTitle').textContent=`${prize.name} 已完成抽獎`;$('winnerName').textContent='此獎項名額已全部抽完';$('winnerList').innerHTML='';updateDrawInfo();return}
+ const pool=availableNames();if(!pool.length)return;const actual=Math.min(need,pool.length);drawing=true;
+ $('winnerTitle').textContent=`🎉 ${prize.name} 抽獎中…`;$('winnerList').innerHTML='';
+ for(let t=0;t<22;t++){$('winnerName').textContent=pool[Math.floor(Math.random()*pool.length)];await sleep(55+t*10)}
+ const selected=shuffle(pool).slice(0,actual);selected.forEach(name=>winners.push({prize:prize.name,name}));
+ $('winnerTitle').textContent=`🎊 ${prize.name} 中獎名單`;$('winnerName').textContent=selected.length===1?selected[0]:`共 ${selected.length} 位中獎`;$('winnerList').innerHTML=selected.map(n=>`<div class="winner-chip">🏆 ${esc(n)}</div>`).join('');
+ renderPrizes();renderWinners();updateAvailable();updateDrawInfo();save();launchConfetti(260);drawing=false;
+}
+function shuffle(a){return [...a].sort(()=>Math.random()-0.5)}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 
-            fire(0.25, { spread: 26, startVelocity: 55 });
-            fire(0.2, { spread: 60 });
-            fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
-            fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
-            fire(0.1, { spread: 120, startVelocity: 45 });
-        }
+async function importExcel(file,type){
+  const data=await file.arrayBuffer();
+  const wb=XLSX.read(data,{type:"array"});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+  if(!rows.length)return;
+  if(type==="participants"){
+    const values=rows.flat().map(x=>String(x).trim()).filter(Boolean);
+    participants=values;
+    if(participants.length>1 && /姓名|名稱|name|參加者/i.test(participants[0]))participants.shift();
+    removeDuplicates();
+  }else{
+    let start=0;
+    if(rows[0] && /獎項|名稱|prize/i.test(String(rows[0][0])))start=1;
+    prizes=rows.slice(start).filter(r=>String(r[0]).trim()).map(r=>({name:String(r[0]).trim(),count:Math.max(1,parseInt(r[1])||1)}));
+    renderPrizes();save();
+  }
+}
+$("participantFile").addEventListener("change",e=>{if(e.target.files[0])importExcel(e.target.files[0],"participants");e.target.value=""});
+$("prizeFile").addEventListener("change",e=>{if(e.target.files[0])importExcel(e.target.files[0],"prizes");e.target.value=""});
 
-        // --- 名單與檔案處理 ---
-        function removeDuplicates() {
-            const textarea = document.getElementById('memberTextarea');
-            const cleanList = textarea.value.split('\n').map(n => n.trim()).filter(n => n !== '');
-            const uniqueList = [...new Set(cleanList)];
-            const diff = cleanList.length - uniqueList.length;
-            textarea.value = uniqueList.join('\n');
-            updateMemberCount();
-            if(diff > 0) {
-                const notice = document.getElementById('dupNotice');
-                notice.innerText = `✨ 已移除 ${diff} 筆重複名單`;
-                setTimeout(() => notice.innerText = '', 3000);
-            }
-        }
+function save(){localStorage.setItem("lotteryData",JSON.stringify({participants,prizes,winners}))}
+function load(){try{const d=JSON.parse(localStorage.getItem("lotteryData")||"{}");participants=d.participants||[];prizes=d.prizes||[];winners=d.winners||[]}catch(e){}}
+function downloadWinners(type){
+  if(!winners.length)return alert("目前沒有中獎名單。");
+  const rows=[["獎項","中獎者"],...winners.map(w=>[w.prize,w.name])];
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"中獎名單");
+  XLSX.writeFile(wb,`中獎名單_${new Date().toISOString().slice(0,10)}.${type==="csv"?"csv":"xlsx"}`);
+}
 
-        function handleFile(e, callback) {
-            const file = e.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                const workbook = XLSX.read(evt.target.result, { type: 'binary' });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                callback(XLSX.utils.sheet_to_json(sheet));
-                e.target.value = '';
-            };
-            reader.readAsBinaryString(file);
-        }
+const canvas=$("confetti"),ctx=canvas.getContext("2d");let pieces=[],raf;
+function launchConfetti(n=180){
+  canvas.width=innerWidth;canvas.height=innerHeight;
+  pieces=Array.from({length:n},()=>({x:innerWidth/2+(Math.random()-.5)*180,y:innerHeight*.28,dx:(Math.random()-.5)*12,dy:Math.random()*-12-4,g:0.35,s:Math.random()*7+4,r:Math.random()*Math.PI,c:Math.random()*360,life:Math.random()*100+100}));
+  cancelAnimationFrame(raf);animateConfetti();
+}
+function animateConfetti(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  pieces.forEach(p=>{p.x+=p.dx;p.y+=p.dy;p.dy+=p.g;p.r+=.1;p.life--;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=`hsl(${p.c},90%,60%)`;ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*1.8);ctx.restore()});
+  pieces=pieces.filter(p=>p.life>0&&p.y<canvas.height+30);
+  if(pieces.length)raf=requestAnimationFrame(animateConfetti);else ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+addEventListener("resize",()=>{canvas.width=innerWidth;canvas.height=innerHeight});
 
-        document.getElementById('memberFile').addEventListener('change', (e) => {
-            handleFile(e, (data) => {
-                const names = data.map(row => row['姓名'] || row['Name'] || Object.values(row)[0]);
-                document.getElementById('memberTextarea').value = names.join('\n');
-                updateMemberCount();
-            });
-        });
-
-        document.getElementById('prizeFile').addEventListener('change', (e) => {
-            handleFile(e, (data) => {
-                const list = document.getElementById('prizeList');
-                list.innerHTML = '';
-                data.forEach(row => {
-                    addPrizeRow(row['獎項名稱'] || Object.values(row)[0], row['數量'] || Object.values(row)[1]);
-                });
-                syncPrizes();
-            });
-        });
-
-        function addPrizeRow(name = '', count = 1) {
-            const div = document.createElement('div');
-            div.className = 'grid grid-cols-12 gap-2';
-            div.innerHTML = `<input type="text" class="p-name col-span-8 p-2 rounded-lg border text-sm" value="${name}" placeholder="獎項名稱"><input type="number" class="p-count col-span-4 p-2 rounded-lg border text-sm text-center font-bold" value="${count}">`;
-            document.getElementById('prizeList').appendChild(div);
-        }
-
-        function updateMemberCount() {
-            const text = document.getElementById('memberTextarea').value;
-            const count = text.split('\n').filter(n => n.trim() !== '').length;
-            document.getElementById('memberCount').innerText = `人數：${count}`;
-        }
-
-        function syncPrizes() {
-            const names = document.querySelectorAll('.p-name');
-            const counts = document.querySelectorAll('.p-count');
-            currentPrizes = [];
-            names.forEach((el, i) => {
-                const c = parseInt(counts[i].value);
-                if (el.value.trim() !== '' && !isNaN(c)) currentPrizes.push({ name: el.value, count: c });
-            });
-            updatePrizeSelect();
-        }
-
-        function updatePrizeSelect() {
-            const select = document.getElementById('prizeSelect');
-            select.innerHTML = currentPrizes.map((p, i) => `<option value="${i}">${p.name} (剩 ${p.count})</option>`).join('');
-        }
-
-        function resetSystem() {
-            if (!confirm("確定重置？這將同步名單並清空紀錄。")) return;
-            currentMembers = document.getElementById('memberTextarea').value.split('\n').filter(n => n.trim() !== '').map(n => n.trim());
-            syncPrizes();
-            history = [];
-            document.getElementById('history').innerHTML = '';
-            document.getElementById('result').innerText = 'READY';
-        }
-
-        function draw() {
-            if (history.length === 0 && currentMembers.length === 0) {
-                currentMembers = document.getElementById('memberTextarea').value.split('\n').filter(n => n.trim() !== '').map(n => n.trim());
-                syncPrizes();
-            }
-            if (currentMembers.length === 0) return alert("名單已空！");
-            const prizeIdx = document.getElementById('prizeSelect').value;
-            const prize = currentPrizes[prizeIdx];
-            if (!prize || prize.count <= 0) return alert("獎項已抽完！");
-
-            const winIdx = Math.floor(Math.random() * currentMembers.length);
-            const winner = currentMembers.splice(winIdx, 1)[0];
-            prize.count--;
-
-            // 更新結果與動畫
-            const resDiv = document.getElementById('result');
-            resDiv.innerText = winner;
-            resDiv.classList.remove('winner-anim');
-            void resDiv.offsetWidth; 
-            resDiv.classList.add('winner-anim');
-
-            // 觸發彩帶特效
-            fireConfetti();
-
-            // 紀錄
-            const hList = document.getElementById('history');
-            const log = `[${prize.name}] ${winner}`;
-            history.push(log);
-            const li = document.createElement('li');
-            li.className = "bg-slate-50 border p-3 rounded-xl flex justify-between items-center text-sm shadow-sm";
-            li.innerHTML = `<strong>${log}</strong><span class="text-xs text-slate-400">#${history.length}</span>`;
-            hList.prepend(li);
-
-            updatePrizeSelect();
-            updateMemberCount();
-        }
-
-        function exportHistory() {
-            if (history.length === 0) return alert("尚無紀錄");
-            const blob = new Blob([history.join('\n')], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `中獎名單.txt`;
-            a.click();
-        }
-
-        document.getElementById('memberTextarea').addEventListener('input', updateMemberCount);
-        updateMemberCount();
-    </script>
+load();renderParticipants();renderPrizes();renderWinners();updateAvailable();
+</script>
 </body>
 </html>
