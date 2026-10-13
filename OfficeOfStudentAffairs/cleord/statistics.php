@@ -292,7 +292,7 @@ function findspecial($spescore,$stagedn,$stageup)
 		if (!$recordtxt =$mysqli->query($sql_txt))
 			error_echo ($_SERVER['PHP_SELF'].__LINE__."-查詢失敗: (" . $mysqli->errno . ") " . $mysqli->error);	
 		list($tscore)=$recordtxt->fetch_array(MYSQLI_NUM);	
-		if 	($tscore<=$spescore)//1.07 榮譽班如果低於特優最低分就取消
+		if 	($tscore<$spescore)//1.07 榮譽班如果低於特優最低分就取消
 			{
 			//echo "bb".$prikey."aa".$spescore."vv<br>";
 			$sql_select1 = "UPDATE cleord SET memo='' WHERE week='".$_REQUEST["selweek"]."' AND kind='".$_REQUEST["selcleord"]."' AND class='".$class."'";
